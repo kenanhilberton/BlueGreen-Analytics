@@ -53,7 +53,7 @@ const translations = {
     kiberTrain: "Cybersecurity Training", breach: "Law Violation", profTitle: "👤 Multifunctional Enterprise Profile",
     corpIdentity: "🏢 Corporate Identity & Integration", compNameLabel: "Official Enterprise Name", adminEmailLabel: "System Admin Email",
     indSector: "Industrial Sector", sysSec: "🔐 System Security", newPass: "New Password", saveBtn: "Save Changes",
-    sysLoc: "⚙️ System Localization", esgLang: "ESG Report Language", aiNotifyCent: "🔔 AI Smart Notification Center",
+    sysLoc: "⚙️ System Localization", esgLang: "ESG Report Language", aiNotifyCent: "🔔 Smart Notification Center AI",
     logoSeal: "📋 Official E-Seal & Logo Integration", logoDesc: "Upload a document for the emblem to appear in PDF/Excel exports.", selectFile: "Select File",
     contactTitle: "📞 Contact & Technical Support", office: "Head Office", close: "Close", chatPlaceholder: "Request AI risk analysis...", avatarLabel: "📸 Profile Picture / Enterprise Logo",
     aiAnalysisBtn: "🧠 Get AI Risk Analysis & ESG Recommendations", aiResponseText: "AI analyzing... Metrics are secure and in the green zone."
@@ -62,7 +62,7 @@ const translations = {
     overview: "Общая Панель", envData: "Экологические Данные", socialG: "Социальные Показатели", govG: "Управление", profSet: "Настройки Профиля",
     liveSys: "● Живая Система ESG", contactSupport: "📞 Связь и Поддержка", logout: "Выход", panelSub: "Живая панель ESG для промышленных предприятий",
     welcome: "Добро пожаловать", scope1: "Scope 1 - Стационарное Сгорание", scope2: "Scope 2 - Потребление Электроэнергии",
-    socialScore: "Индекс Социальной Устойчивости", corpGov: "Корпоративное Управление", perfect: "Отлично", high: "Высокий", optimal: "Оптимальный",
+    socialScore: "Индекс Социальной Устойчивости", corpGov: "Corporate Governance", perfect: "Отлично", high: "Высокий", optimal: "Оптимальный",
     chartTitle1: "Ежемесячный Тренд Выбросов Углерода vs Оптимальная Цель", waterCons: "Потребление Воды (Текущий Месяц)",
     greenEnergy: "Доля Возобновляемой Энергии", wasteUtil: "Индекс Утилизации Отходов", saving: "Экономия", artim: "Рост",
     segmentTitle: "Сегментация Углеродного Следа", tableTitle1: "📋 12-Месячный Отчет об Экологических Ресурсах",
@@ -146,7 +146,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           return;
         }
 
-        const res = await fetch('http://localhost:5000/api/sensors/live', {
+        const res = await fetch('https://bluegreen-backend.onrender.com/api/sensors/live', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -237,7 +237,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         .esg-table tr:hover { background: rgba(255, 255, 255, 0.03); }
         .profile-input { padding: 0.8rem 1rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #fff; outline: none; font-size: 0.95rem; border-radius: 10px; width: 100%; box-sizing: border-box; }
 
-        /* 📱 MOBİL VƏ PLANŞET RESPONSIVE STİLLƏRİ */
+        /* TELEFON VƏ PLANŞET RESPONSİVLİYİ */
         @media (max-width: 1024px) {
           aside { width: 80px !important; padding: 2rem 0.5rem !important; align-items: center; }
           aside .profile-input, aside p, aside strong, aside span:not(:first-child) { display: none !important; }
@@ -253,13 +253,14 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
         @media (max-width: 768px) {
           aside { display: none !important; }
-          nav { padding: 0 1rem !important; }
-          main { padding: 1.5rem !important; }
+          nav { padding: 0 1rem !important; left: 0 !important; width: 100% !important; }
+          main { padding: 1.5rem !important; margin-left: 0 !important; }
           .neon-alert-box { left: 20px !important; right: 20px !important; bottom: 20px !important; max-width: 100% !important; }
           div[style*="gridTemplateColumns"] { grid-template-columns: 1fr !important; }
           h1 { font-size: 1.6rem !important; }
           .esg-table th, .esg-table td { padding: 0.8rem 0.5rem !important; font-size: 0.8rem !important; }
           div[style*="width: '420px'"] { width: 100% !important; }
+          .scrollable-table-container { overflow-x: auto; width: 100%; }
         }
       `;
       document.head.appendChild(styleElement);
@@ -269,7 +270,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const handleProfileSave = async () => {
     try {
       const activeToken = token || localStorage.getItem('esg_token');
-      const response = await fetch('http://localhost:5000/api/profile/update', {
+      const response = await fetch('https://bluegreen-backend.onrender.com/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -292,11 +293,14 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         localStorage.setItem('bg_company_name', profileName);
         localStorage.setItem('bg_user_email', profileEmail);
         alert(lang === 'az' ? "✓ Dəyişikliklər uğurla yadda saxlanıldı!" : "✓ Saved successfully!");
+        setNewPass('');
       } else {
-        alert("Xəta baş verdi.");
+        const errData = await response.json().catch(() => ({}));
+        alert(errData.message || "Xəta baş verdi.");
       }
     } catch (error) {
       console.error("Profil yenilənərkən xəta:", error);
+      alert("Şəbəkə xətası baş verdi.");
     }
   };
 
@@ -371,17 +375,17 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   ];
 
   const socialBarData = [
-    { name: lang==='en'?'Safety':lang==='ru'?'Безопасность':'HSE Təhlükəsizlik', skor: metrics.hse > 100 ? 95 : metrics.hse }, 
-    { name: lang==='en'?'Gender':lang==='ru'?'Гендер':'Gender Balansı', skor: 78 }, 
-    { name: lang==='en'?'Satisfaction':lang==='ru'?'Удовл.':'İşçi Rifahı', skor: 88 }, 
+    { name: lang==='en'?'Safety':lang==='ru'?'Безопасность':'HSE Təhlükəsizlik', skor: metrics.hse > 100 ? 95 : metrics.hse },
+    { name: lang==='en'?'Gender':lang==='ru'?'Гендер':'Gender Balansı', skor: 78 },
+    { name: lang==='en'?'Satisfaction':lang==='ru'?'Удовл.':'İşçi Rifahı', skor: 88 },
     { name: lang==='en'?'Training':lang==='ru'?'Обучение':'ESG Təlimləri', skor: 92 },
   ];
 
   const govRadarData = [
-    { subject: lang==='en'?'Transparency':lang==='ru'?'Прозрачность':'Şəffaflıq', A: 98 }, 
-    { subject: lang==='en'?'Cyber':lang==='ru'?'Кибер':'Kiber Təhl.', A: 95 }, 
-    { subject: lang==='en'?'Audit':lang==='ru'?'Аудит':'Audit Uyğun.', A: 92 }, 
-    { subject: lang==='en'?'Investor':lang==='ru'?'Инвестор':'İnvestor', A: 90 }, 
+    { subject: lang==='en'?'Transparency':lang==='ru'?'Прозрачность':'Şəffaflıq', A: 98 },
+    { subject: lang==='en'?'Cyber':lang==='ru'?'Кибер':'Kiber Təhl.', A: 95 },
+    { subject: lang==='en'?'Audit':lang==='ru'?'Аудит':'Audit Uyğun.', A: 92 },
+    { subject: lang==='en'?'Investor':lang==='ru'?'Инвестор':'İnvestor', A: 90 },
     { subject: lang==='en'?'Risk':lang==='ru'?'Риски':'Risk İdarə.', A: 95 },
   ];
 
@@ -389,7 +393,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => { setAvatarSrc(reader.result); };
+      reader.onloadend = () => {
+        setAvatarSrc(reader.result);
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -399,17 +405,16 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     if (!chatInput.trim()) return;
     setChatMessages(prev => [...prev, { sender: 'user', text: chatInput }]);
     setChatInput('');
-    setTimeout(() => { setChatMessages(prev => [...prev, { sender: 'ai', text: t.aiResponseText }]); }, 700);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, { sender: 'ai', text: t.aiResponseText }]);
+    }, 700);
   };
 
   return (
     <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#050816', fontFamily: globalFont, color: '#fff', display: 'flex', position: 'relative' }}>
-      
       <GridDistortion imageSrc={darkNeonImage} grid={10} mouse={0.25} strength={0.15} relaxation={0.9} />
-
+      
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%' }}>
-        
-        {}
         <aside style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '3rem' }}>
             <img src={LogoImg} alt="Logo" style={{ width: '32px', height: '32px' }} />
@@ -417,367 +422,403 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               <span style={{ color: '#00D2FF' }}>Blue</span><span style={{ color: '#00FF87' }}>Green</span>
             </div>
           </div>
-
+          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
             {[
               { id: 'overview', label: t.overview, icon: '📊' },
               { id: 'env', label: t.envData, icon: '🌱' },
               { id: 'social', label: t.socialG, icon: '🤝' },
               { id: 'gov', label: t.govG, icon: '⚖️' },
+              { id: 'profile', label: t.profSet, icon: '👤' }
             ].map((item) => (
               <div 
-                key={item.id} onClick={() => setActiveTab(item.id)}
-                style={{ 
+                key={item.id} 
+                onClick={() => setActiveTab(item.id)}
+                style={{
                   padding: '0.85rem 1rem', borderRadius: '12px', cursor: 'pointer', transition: '0.2s',
                   background: activeTab === item.id ? 'rgba(0, 210, 255, 0.12)' : 'transparent',
                   borderLeft: activeTab === item.id ? '4px solid #00D2FF' : '4px solid transparent',
-                  color: activeTab === item.id ? '#fff' : '#b0b7c6',
-                  display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.95rem'
+                  color: activeTab === item.id ? '#fff' : '#b0b7c6', fontWeight: activeTab === item.id ? '600' : '500',
+                  display: 'flex', alignItems: 'center', gap: '0.75rem'
                 }}
               >
-                <span>{item.icon}</span> {item.label}
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
               </div>
             ))}
-            <div style={{ margin: '1rem 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}></div>
-            <div 
-              onClick={() => setActiveTab('profile')}
-              style={{ 
-                padding: '0.85rem 1rem', borderRadius: '12px', cursor: 'pointer', transition: '0.2s',
-                background: activeTab === 'profile' ? 'rgba(157, 78, 221, 0.15)' : 'rgba(255,255,255,0.02)',
-                borderLeft: activeTab === 'profile' ? '4px solid #9d4edd' : '4px solid transparent',
-                color: activeTab === 'profile' ? '#fff' : '#b0b7c6',
-                display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.95rem', border: '1px solid rgba(255,255,255,0.03)'
-              }}
-            >
-              <span>👤</span> <strong>{t.profSet}</strong>
-            </div>
-
-            <div style={{ marginTop: '1rem', display: 'flex', gap: '5px' }}>
-              {['az', 'en', 'ru'].map(l => (
-                <button key={l} onClick={() => setLang(l)} style={{ flex: 1, padding: '5px', background: lang === l ? '#00D2FF' : 'rgba(255,255,255,0.05)', color: lang === l ? '#050816' : '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.75rem' }}>{l.toUpperCase()}</button>
-              ))}
-            </div>
           </div>
 
-          <div style={{ padding: '0.8rem', background: 'rgba(5,8,22,0.4)', borderRadius: '12px', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
-            {avatarSrc ? (
-              <img src={avatarSrc} alt="Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-            ) : (
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #00D2FF 0%, #00FF87 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#050816', fontSize: '0.8rem' }}>
-                {profileName.substring(0,2).toUpperCase()}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #00D2FF, #00FF87)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', color: '#050816', overflow: 'hidden' }}>
+                {avatarSrc ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profileName.charAt(0).toUpperCase()}
               </div>
-            )}
-            <div style={{ overflow: 'hidden' }}>
-              <p style={{ fontSize: '0.8rem', fontWeight: '700', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{profileName}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '160px' }}>
+                <strong style={{ fontSize: '0.9rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profileName}</strong>
+                <span style={{ fontSize: '0.75rem', color: '#00FF87', fontWeight: '600' }}>{t.liveSys}</span>
+              </div>
             </div>
-          </div>
 
-          <button onClick={onLogout} style={{ padding: '0.7rem', background: 'rgba(255, 75, 75, 0.1)', color: '#ff4b4b', border: 'none', borderRadius: '10px', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
-            {t.logout}
-          </button>
+            <button 
+              onClick={() => setIsChatOpen(true)}
+              style={{ padding: '0.75rem 1rem', borderRadius: '10px', background: 'rgba(157, 78, 221, 0.15)', border: '1px solid rgba(157, 78, 221, 0.3)', color: '#d4a5ff', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', transition: '0.2s' }}
+            >
+              🧠 BlueGreen AI
+            </button>
+
+            <button 
+              onClick={onLogout}
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', background: 'rgba(255, 75, 75, 0.08)', border: '1px solid rgba(255, 75, 75, 0.15)', color: '#ff7676', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', transition: '0.2s' }}
+            >
+              {t.logout}
+            </button>
+          </div>
         </aside>
 
-        {}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-          
-          <nav style={{ height: '70px', background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', padding: '0 2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
-            <div><span style={{ fontSize: '0.85rem', background: 'rgba(0, 255, 135, 0.1)', padding: '6px 14px', borderRadius: '20px', border: '1px solid #00FF87', color: '#00FF87', fontWeight: '600' }}>{t.liveSys}</span></div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <nav style={{ height: '70px', padding: '0 2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 10 }}>
             <div>
-              <button onClick={() => setIsChatOpen(true)} style={{ padding: '0.5rem 1.2rem', background: 'linear-gradient(135deg, #9d4edd 0%, #2b44ff 100%)', color: '#fff', border: 'none', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' }}>{t.aiAnalysisBtn}</button>
+              <span style={{ fontSize: '0.85rem', color: '#8a93a6', fontWeight: '500' }}>{t.panelSub}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '2px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                {['az', 'en', 'ru'].map((l) => (
+                  <button key={l} onClick={() => setLang(l)} style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', background: lang === l ? '#00D2FF' : 'transparent', color: lang === l ? '#050816' : '#8a93a6', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer', textTransform: 'uppercase', transition: '0.15s' }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
           </nav>
 
-          <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
-            <header style={{ marginBottom: '2rem' }}>
-              <h1 style={{ fontSize: '2.2rem', fontWeight: '800', letterSpacing: '-0.5px', margin: 0 }}>
-                {activeTab === 'overview' && `${t.welcome}, ${profileName}!`}
-                {activeTab === 'env' && t.envData} {activeTab === 'social' && t.socialG} {activeTab === 'gov' && t.govG} {activeTab === 'profile' && t.profTitle}
-              </h1>
-              <p style={{ color: '#b0b7c6', fontSize: '0.95rem', marginTop: '0.3rem' }}>{t.panelSub}</p>
-            </header>
-
-            {}
+          <main style={{ padding: '2.5rem', flex: 1, overflowY: 'auto' }}>
             {activeTab === 'overview' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: '800', margin: 0, background: 'linear-gradient(to right, #fff, #8a93a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                      {t.welcome}, {profileName}!
+                    </h1>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button onClick={() => exportToExcel(reportData12Months, profileName)} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'rgba(0, 255, 135, 0.1)', border: '1px solid rgba(0, 255, 135, 0.2)', color: '#00FF87', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
+                      Excel 📊
+                    </button>
+                    <button onClick={() => exportToPDF(reportData12Months, profileName)} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid rgba(0, 210, 255, 0.2)', color: '#00D2FF', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
+                      PDF 📄
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
                   {statsOverview.map((s, i) => (
-                    <div key={i} className={s.isStarred ? 'star-border-card' : ''} style={{ padding: '1.5rem', borderRadius: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', border: s.isStarred ? 'none' : '1px solid rgba(255,255,255,0.05)', background: s.isStarred ? '' : 'rgba(255,255,255,0.02)' }}>
-                      <p style={{ color: '#aaa', fontSize: '0.85rem', marginBottom: '8px', zIndex: 5 }}>{s.title}</p>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', zIndex: 5 }}>
-                        <h2 style={{ fontSize: '1.6rem', fontWeight: '700' }}>
-                          <LocalCountUp from={0} to={s.value} />
-                          <span style={{ fontSize: '0.9rem', color: '#888', marginLeft: '2px' }}>{s.suffix}</span>
-                        </h2>
-                        <span style={{ color: s.color, fontWeight: 'bold', fontSize: '0.85rem' }}>{s.change}</span>
+                    <div key={i} className={s.isStarred ? "star-border-card" : ""} style={!s.isStarred ? { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '1.5rem' } : { padding: '1.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8a93a6', fontSize: '0.85rem', fontWeight: '500', marginBottom: '0.8rem' }}>
+                        <span>{s.title}</span>
+                        <span style={{ color: s.color, fontWeight: '700' }}>{s.change}</span>
+                      </div>
+                      <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#fff' }}>
+                        <LocalCountUp to={s.value} />
+                        <span style={{ fontSize: '1rem', color: '#8a93a6', fontWeight: '500' }}>{s.suffix}</span>
                       </div>
                     </div>
                   ))}
                 </div>
-                
-                <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', height: '360px' }}>
-                  <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#00D2FF' }}>{t.chartTitle1}</h3>
-                  <div style={{ width: '100%', height: '280px' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={overviewChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                        <XAxis dataKey="name" stroke="#666" fontSize={11} tickLine={false} />
-                        <YAxis stroke="#666" fontSize={11} tickLine={false} />
-                        <Tooltip contentStyle={{ background: '#090d22', border: '1px solid #00D2FF', borderRadius: '8px' }} />
-                        <Legend wrapperStyle={{ fontSize: '0.85rem' }} />
-                        <Area name="Cari Emissiya (%)" type="monotone" dataKey="emissiya" stroke="#00D2FF" strokeWidth={2.5} fill="rgba(0, 210, 255, 0.05)" />
-                        <Area name="Hədəf Limiti (%)" type="monotone" dataKey="hədəf" stroke="#ff4b4b" strokeWidth={1.5} strokeDasharray="5 5" fill="none" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            {}
-            {activeTab === 'env' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '1.2rem', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <p style={{ color: '#aaa', fontSize: '0.8rem' }}>{t.waterCons}</p>
-                    <h3 style={{ fontSize: '1.6rem', marginTop: '5px', fontWeight: '700' }}>{metrics.water.toLocaleString()} m³</h3>
-                  </div>
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '1.2rem', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <p style={{ color: '#aaa', fontSize: '0.8rem' }}>{t.greenEnergy}</p>
-                    <h3 style={{ fontSize: '1.6rem', marginTop: '5px', fontWeight: '700' }}>18.4%</h3>
-                  </div>
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '1.2rem', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <p style={{ color: '#aaa', fontSize: '0.8rem' }}>{t.wasteUtil}</p>
-                    <h3 style={{ fontSize: '1.6rem', marginTop: '5px', fontWeight: '700' }}>{metrics.waste}%</h3>
-                  </div>
-                </div>
-
-                <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                  <div>
-                    <h4 style={{ fontSize: '1.1rem', color: '#00FF87', marginBottom: '1rem' }}>{t.segmentTitle}</h4>
-                    {envPieData.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.9rem' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: item.color }}></div>
-                        <span>{item.name}: <strong>{item.value}%</strong></span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ width: '200px', height: '200px' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={envPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                          {envPieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' }}>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '10px' }}>
-                    <h3 style={{ fontSize: '1.1rem', color: '#00D2FF', margin: 0 }}>{t.tableTitle1}</h3>
-                    
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button 
-                        onClick={() => {
-                          const excelData = reportData12Months.map(row => ({
-                            "Ay": row.month,
-                            "Scope 1 (tCO2e)": row.scope1,
-                            "Scope 2 (tCO2e)": row.scope2,
-                            "Su İstehlakı (m³)": row.waterConsumption,
-                            "Yaşıl Enerji (%)": row.greenEnergyShare
-                          }));
-                          exportToExcel(excelData, `Ekoloji_Hesabat_${profileName.replace(/\s+/g, '_')}`);
-                        }}
-                        style={{ padding: '6px 14px', background: 'rgba(0, 255, 135, 0.1)', color: '#00FF87', border: '1px solid #00FF87', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
-                      >
-                        🟢 Excel Yüklə
-                      </button>
-
-                      <button 
-                        onClick={() => {
-                          const headers = [t.month, `${t.s1Em} (tCO2e)`, `${t.s2Em} (tCO2e)`, `${t.waterI} (m³)`, `${t.greenE} (%)`];
-                          const rows = reportData12Months.map(row => [
-                            row.month, row.scope1, row.scope2, row.waterConsumption.toLocaleString(), `${row.greenEnergyShare}%`
-                          ]);
-                          exportToPDF(`${profileName} - 12 Aylıq Ekoloji Resurs Hesabatı`, headers, rows, `Ekoloji_Hesabat_${profileName.replace(/\s+/g, '_')}`);
-                        }}
-                        style={{ padding: '6px 14px', background: 'rgba(0, 210, 255, 0.1)', color: '#00D2FF', border: '1px solid #00D2FF', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
-                      >
-                        🔵 PDF Yüklə
-                      </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1.5rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.chartTitle1}</h3>
+                    <div style={{ width: '100%', height: '280px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={overviewChartData}>
+                          <defs>
+                            <linearGradient id="colorEm" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00D2FF" stopOpacity={0.3}/><stop offset="95%" stopColor="#00D2FF" stopOpacity={0}/></linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                          <XAxis dataKey="name" stroke="#5d6575" fontSize={11} />
+                          <YAxis stroke="#5d6575" fontSize={11} />
+                          <Tooltip contentStyle={{ background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+                          <Legend verticalAlign="top" height={36} />
+                          <Area type="monotone" dataKey="emissiya" name={lang==='en'?'Actual Emission':lang==='ru'?'Факт Выбросы':'Faktiki Emissiya'} stroke="#00D2FF" strokeWidth={2} fillOpacity={1} fill="url(#colorEm)" />
+                          <Area type="monotone" dataKey="hədəf" name={lang==='en'?'Optimal Target':lang==='ru'?'Цель':'Optimal Hədəf'} stroke="#FF4B4B" strokeWidth={1} strokeDasharray="5 5" fill="none" />
+                        </AreaChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
 
-                  <table className="esg-table">
-                    <thead>
-                      <tr>
-                        <th>{t.month}</th>
-                        <th>{t.s1Em} (tCO₂e)</th>
-                        <th>{t.s2Em} (tCO₂e)</th>
-                        <th>{t.waterI} (m³)</th>
-                        <th>{t.greenE} (%)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData12Months.map((row, index) => (
-                        <tr key={index}>
-                          <td><strong>{row.month}</strong></td>
-                          <td>{row.scope1}</td>
-                          <td>{row.scope2}</td>
-                          <td>{row.waterConsumption.toLocaleString()}</td>
-                          <td style={{ color: '#00FF87' }}>{row.greenEnergyShare}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1.5rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.liveSys} - Canlı Sensor İzləmə Axını</h3>
+                    <div style={{ width: '100%', height: '280px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={historyData}>
+                          <defs>
+                            <linearGradient id="colorLiveCo2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00FF87" stopOpacity={0.2}/><stop offset="95%" stopColor="#00FF87" stopOpacity={0}/></linearGradient>
+                            <linearGradient id="colorLiveEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#FFBB00" stopOpacity={0.2}/><stop offset="95%" stopColor="#FFBB00" stopOpacity={0}/></linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                          <XAxis dataKey="name" stroke="#5d6575" fontSize={11} />
+                          <YAxis stroke="#5d6575" fontSize={11} />
+                          <Tooltip contentStyle={{ background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+                          <Legend verticalAlign="top" height={36} />
+                          <Area type="monotone" dataKey="CO₂ (Ton)" stroke="#00FF87" strokeWidth={2} fill="url(#colorLiveCo2)" />
+                          <Area type="monotone" dataKey="Enerji (kWh)" stroke="#FFBB00" strokeWidth={2} fill="url(#colorLiveEnergy)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {}
+            {activeTab === 'env' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
+                    <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.waterCons}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#00D2FF' }}><LocalCountUp to={metrics.water} /> m³</div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
+                    <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.greenEnergy}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#00FF87' }}>18.4%</div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
+                    <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.wasteUtil}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#9d4edd' }}><LocalCountUp to={metrics.waste} />%</div>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0 0 1.5rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.segmentTitle}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
+                    <div style={{ width: '220px', height: '220px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={envPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                            {envPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                      {envPieData.map((d, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem' }}>
+                          <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: d.color }} />
+                          <span style={{ color: '#b0b7c6' }}>{d.name}:</span>
+                          <strong style={{ color: '#fff' }}>{d.value}%</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: 0, color: '#b0b7c6', fontWeight: '600' }}>{t.tableTitle1}</h3>
+                  <div className="scrollable-table-container">
+                    <table className="esg-table">
+                      <thead>
+                        <tr>
+                          <th>{t.month}</th>
+                          <th>{t.s1Em} (tCO₂e)</th>
+                          <th>{t.s2Em} (tCO₂e)</th>
+                          <th>{t.waterI} (m³)</th>
+                          <th>{t.greenE} (%)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData12Months.map((row, i) => (
+                          <tr key={i}>
+                            <td>{row.month}</td>
+                            <td>{row.scope1}</td>
+                            <td>{row.scope2}</td>
+                            <td>{row.waterConsumption}</td>
+                            <td>{row.greenEnergyShare}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'social' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '1.2rem', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <p style={{ color: '#aaa', fontSize: '0.8rem' }}>{t.hseDays}</p>
-                    <h3 style={{ fontSize: '1.6rem', marginTop: '5px', fontWeight: '700', color: '#00FF87' }}>{metrics.hse} Gün</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
+                    <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.hseDays}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#00FF87' }}><LocalCountUp to={metrics.hse} /> Gün</div>
                   </div>
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '1.2rem', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <p style={{ color: '#aaa', fontSize: '0.8rem' }}>{t.avgTrain}</p>
-                    <h3 style={{ fontSize: '1.6rem', marginTop: '5px', fontWeight: '700' }}>{metrics.training} Saat / İşçi</h3>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
+                    <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.avgTrain}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#00D2FF' }}><LocalCountUp to={metrics.training} /> Saat / İşçi</div>
                   </div>
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '1.2rem', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <p style={{ color: '#aaa', fontSize: '0.8rem' }}>{t.turnOver}</p>
-                    <h3 style={{ fontSize: '1.6rem', marginTop: '5px', fontWeight: '700', color: '#ff4b4b' }}>1.2% ({t.low})</h3>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
+                    <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.turnOver}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#ff4b4b' }}>1.2% <span style={{ fontSize: '0.85rem', color: '#00FF87', fontWeight: '500' }}>({t.low})</span></div>
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', height: '350px' }}>
-                  <h3 style={{ fontSize: '1rem', marginBottom: '1.5rem', color: '#00FF87' }}>{t.socialInd}</h3>
-                  <ResponsiveContainer width="100%" height="85%">
-                    <BarChart data={socialBarData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                      <XAxis dataKey="name" stroke="#aaa" fontSize={12} />
-                      <YAxis stroke="#aaa" fontSize={12} />
-                      <Tooltip contentStyle={{ background: '#090d22', border: '1px solid #00FF87' }} />
-                      <Bar dataKey="skor" fill="#00FF87" radius={[10, 10, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0 0 1.5rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.socialInd}</h3>
+                  <div style={{ width: '100%', height: '280px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={socialBarData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="name" stroke="#5d6575" fontSize={12} />
+                        <YAxis stroke="#5d6575" fontSize={12} domain={[0, 100]} />
+                        <Tooltip contentStyle={{ background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <Bar dataKey="skor" name={lang==='en'?'Score Index':lang==='ru'?'Индекс':'Performans İndeksi'} fill="#00FF87" radius={[6, 6, 0, 0]}>
+                          {socialBarData.map((entry, index) => <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#00FF87' : '#00D2FF'} />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
 
-                <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' }}>
-                  <h3 style={{ fontSize: '1.1rem', color: '#00FF87', margin: 0 }}>{t.tableTitle2}</h3>
-                  <table className="esg-table">
-                    <thead>
-                      <tr>
-                        <th>{t.hsePeriod}</th>
-                        <th>{t.workerSat} (%)</th>
-                        <th>{t.trainVol} (Saat)</th>
-                        <th>{t.staffAx} (%)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData12Months.map((row, index) => (
-                        <tr key={index}>
-                          <td><strong>{row.month}</strong></td>
-                          <td>{row.employeeSatisfaction}%</td>
-                          <td>{row.trainingHours} s</td>
-                          <td style={{ color: '#ff4b4b' }}>{row.staffTurnover}%</td>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: 0, color: '#b0b7c6', fontWeight: '600' }}>{t.tableTitle2}</h3>
+                  <div className="scrollable-table-container">
+                    <table className="esg-table">
+                      <thead>
+                        <tr>
+                          <th>{t.hsePeriod}</th>
+                          <th>{t.workerSat} (%)</th>
+                          <th>{t.trainVol} (Saat)</th>
+                          <th>{t.staffAx} (%)</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {reportData12Months.map((row, i) => (
+                          <tr key={i}>
+                            <td>{row.month}</td>
+                            <td>{row.employeeSatisfaction}%</td>
+                            <td>{row.trainingHours} s</td>
+                            <td>{row.staffTurnover}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
 
-            {}
             {activeTab === 'gov' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', height: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '1rem', alignSelf: 'flex-start', color: '#9d4edd', margin: 0 }}>{t.radarTitle}</h3>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.radarTitle}</h3>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '320px' }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={govRadarData}>
-                        <PolarGrid stroke="rgba(255,255,255,0.05)" />
-                        <PolarAngleAxis dataKey="subject" stroke="#aaa" fontSize={11} />
-                        <Radar name="Uyğunluq" dataKey="A" stroke="#9d4edd" fill="#9d4edd" fillOpacity={0.3} />
+                      <RadarChart cx="50%" cy="50%" radius="70%" data={govRadarData}>
+                        <PolarGrid stroke="rgba(255,255,255,0.08)" />
+                        <PolarAngleAxis dataKey="subject" stroke="#8a93a6" fontSize={12} />
+                        <Radar name="Audit" dataKey="A" stroke="#00D2FF" fill="#00D2FF" fillOpacity={0.25} />
+                        <Tooltip contentStyle={{ background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)' }} />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
-
-                  <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.5rem' }}>
-                    <div>
-                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#aaa' }}>{t.griComp}</p>
-                      <h3 style={{ margin: '5px 0 0 0', fontSize: '1.8rem', color: '#00D2FF' }}>98.5%</h3>
-                    </div>
-                    <div>
-                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#aaa' }}>{t.eticTrain}</p>
-                      <h3 style={{ margin: '5px 0 0 0', fontSize: '1.8rem', color: '#00FF87' }}>100%</h3>
-                    </div>
-                  </div>
                 </div>
 
-                <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' }}>
-                  <h3 style={{ fontSize: '1.1rem', color: '#9d4edd', margin: 0 }}>{t.tableTitle3}</h3>
-                  <table className="esg-table">
-                    <thead>
-                      <tr>
-                        <th>{t.period}</th>
-                        <th>{t.griIdx} (%)</th>
-                        <th>{t.transparencyDeg} (%)</th>
-                        <th>{t.kiberTrain} (%)</th>
-                        <th>{t.breach}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData12Months.map((row, index) => (
-                        <tr key={index}>
-                          <td><strong>{row.month}</strong></td>
-                          <td>{row.griCompliance}%</td>
-                          <td>{row.transparencyDegree}%</td>
-                          <td>{row.cyberSecurityTraining}%</td>
-                          <td style={{ color: row.lawViolations > 0 ? '#ff4b4b' : '#00FF87' }}>{row.lawViolations}</td>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: 0, color: '#b0b7c6', fontWeight: '600' }}>{t.tableTitle3}</h3>
+                  <div className="scrollable-table-container">
+                    <table className="esg-table">
+                      <thead>
+                        <tr>
+                          <th>{t.period}</th>
+                          <th>{t.griIdx} (%)</th>
+                          <th>{t.transparencyDeg} (%)</th>
+                          <th>{t.kiberTrain} (%)</th>
+                          <th>{t.breach}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {reportData12Months.map((row, i) => (
+                          <tr key={i}>
+                            <td>{row.month}</td>
+                            <td>{row.griCompliance}%</td>
+                            <td>{row.transparencyDegree}%</td>
+                            <td>{row.cyberSecurityTraining}%</td>
+                            <td style={{ color: '#00FF87', fontWeight: 'bold' }}>{row.lawViolations}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
 
-            {}
             {activeTab === 'profile' && (
-              <div style={{ background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(10px)', padding: '2.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                  <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#00D2FF' }}>{t.corpIdentity}</h3>
-                  <div>
-                    <label style={{ fontSize: '0.85rem', color: '#aaa', display: 'block', marginBottom: '6px' }}>{t.compNameLabel}</label>
-                    <input className="profile-input" type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>{t.profTitle}</h2>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#00D2FF', fontWeight: '600' }}>{t.corpIdentity}</h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#8a93a6' }}>{t.compNameLabel}</label>
+                      <input type="text" className="profile-input" value={profileName} onChange={(e) => setProfileName(e.target.value)} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#8a93a6' }}>{t.adminEmailLabel}</label>
+                      <input type="email" className="profile-input" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#8a93a6' }}>{t.indSector}</label>
+                      <select className="profile-input" style={{ cursor: 'pointer' }}>
+                        <option>Heavy Industry / Sənaye</option>
+                        <option>Green Energy Production</option>
+                        <option>Oil & Gas Refinery</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ fontSize: '0.85rem', color: '#aaa', display: 'block', marginBottom: '6px' }}>{t.adminEmailLabel}</label>
-                    <input className="profile-input" type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} />
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#FFBB00', fontWeight: '600' }}>{t.sysSec}</h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#8a93a6' }}>{t.newPass}</label>
+                      <input type="password" className="profile-input" placeholder="••••••••" value={newPass} onChange={(e) => setNewPass(e.target.value)} />
+                    </div>
+
+                    <h3 style={{ fontSize: '1.1rem', margin: '1rem 0 0 0', color: '#00FF87', fontWeight: '600' }}>{t.sysLoc}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#8a93a6' }}>{t.esgLang}</label>
+                      <select className="profile-input" value={lang} onChange={(e) => setLang(e.target.value)} style={{ cursor: 'pointer' }}>
+                        <option value="az">Azərbaycan dili (AZ)</option>
+                        <option value="en">English (EN)</option>
+                        <option value="ru">Русский (RU)</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ fontSize: '0.85rem', color: '#aaa', display: 'block', marginBottom: '6px' }}>{t.newPass}</label>
-                    <input className="profile-input" type="password" placeholder="••••••••" value={newPass} onChange={(e) => setNewPass(e.target.value)} />
-                  </div>
-                  <button onClick={handleProfileSave} style={{ padding: '0.8rem', background: 'linear-gradient(135deg, #00D2FF 0%, #00FF87 100%)', color: '#050816', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', marginTop: '1rem' }}>{t.saveBtn}</button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', justifyContent: 'center', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '2.5rem' }}>
-                  <p style={{ fontSize: '0.9rem', color: '#aaa', margin: 0 }}>{t.avatarLabel}</p>
-                  <div style={{ width: '120px', height: '120px', borderRadius: '50%', border: '2px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: 'rgba(255,255,255,0.01)' }}>
-                    {avatarSrc ? <img src={avatarSrc} alt="Enterprise Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '2.5rem' }}>🏢</span>}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#9d4edd', fontWeight: '600' }}>{t.logoSeal}</h3>
+                  <p style={{ fontSize: '0.85rem', color: '#8a93a6', margin: 0 }}>{t.logoDesc}</p>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#b0b7c6' }}>{t.avatarLabel}</span>
+                      <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ color: '#8a93a6', fontSize: '0.85rem' }} />
+                    </div>
+                    {avatarSrc && (
+                      <div style={{ width: '80px', height: '80px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <img src={avatarSrc} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
                   </div>
-                  <label style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '0.85rem', cursor: 'pointer' }}>
-                    {t.selectFile}
-                    <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
-                  </label>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={handleProfileSave} style={{ padding: '0.9rem 2rem', borderRadius: '12px', background: 'linear-gradient(135deg, #00D2FF 0%, #00FF87 100%)', color: '#050816', border: 'none', fontWeight: '700', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0, 255, 135, 0.2)' }}>
+                    {t.saveBtn}
+                  </button>
                 </div>
               </div>
             )}
@@ -785,30 +826,34 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         </div>
       </div>
 
-      {}
       {isChatOpen && (
-        <div style={{ position: 'fixed', top: 0, right: 0, width: '420px', height: '100vh', background: '#090e26', borderLeft: '1px solid rgba(0, 210, 255, 0.2)', zIndex: 1000, display: 'flex', flexDirection: 'column', boxShadow: '-10px 0 30px rgba(0,0,0,0.5)' }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#00D2FF' }}>🤖 BlueGreen AI Copilot</h3>
-            <button onClick={() => setIsChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#ff4b4b', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>✕</button>
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', width: '420px', height: '550px', background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{ fontSize: '1.3rem' }}>🧠</span>
+              <div>
+                <strong style={{ fontSize: '0.95rem' }}>BlueGreen AI Core</strong>
+                <div style={{ fontSize: '0.75rem', color: '#00FF87' }}>Industrial Risk Analyzer v2.4</div>
+              </div>
+            </div>
+            <button onClick={() => setIsChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#8a93a6', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
           </div>
-
-          <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {chatMessages.map((msg, idx) => (
-              <div key={idx} style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', background: msg.sender === 'user' ? 'rgba(0, 210, 255, 0.15)' : 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', maxWidth: '85%', fontSize: '0.9rem', color: msg.sender === 'user' ? '#00D2FF' : '#e0e6ed', border: msg.sender === 'user' ? '1px solid rgba(0, 210, 255, 0.2)' : '1px solid rgba(255,255,255,0.02)', whiteSpace: 'pre-wrap' }}>
+          
+          <div style={{ flex: 1, padding: '1.2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem', lineHeight: '1.4' }}>
+            {chatMessages.map((msg, i) => (
+              <div key={i} style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', background: msg.sender === 'user' ? '#00D2FF' : 'rgba(255,255,255,0.03)', color: msg.sender === 'user' ? '#050816' : '#fff', padding: '0.8rem 1.1rem', borderRadius: '16px', maxWidth: '85%', border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.04)', whiteSpace: 'pre-line' }}>
                 {msg.text}
               </div>
             ))}
           </div>
 
-          <form onSubmit={handleSendMessage} style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '10px' }}>
-            <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder={t.chatPlaceholder} style={{ flex: 1, padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#fff', outline: 'none' }} />
+          <form onSubmit={handleSendMessage} style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '0.5rem' }}>
+            <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder={t.chatPlaceholder} style={{ flex: 1, padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#fff', outline: 'none', fontSize: '0.9rem' }} />
             <button type="submit" style={{ padding: '0 1rem', background: '#00D2FF', color: '#050816', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>➔</button>
           </form>
         </div>
       )}
 
-      {}
       {activeAlert && (
         <div 
           className="neon-alert-box"
@@ -838,12 +883,11 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               ✕
             </button>
           </div>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#e0e6ed', lineHeight: '1.4' }}>
+          <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#e2e5ec', lineHeight: '1.4' }}>
             {activeAlert.message}
           </p>
         </div>
       )}
-
     </div>
   );
 };
