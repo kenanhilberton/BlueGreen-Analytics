@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { exportToExcel, exportToPDF } from '../utils/exportFiles.js';
 import { API_BASE_URL } from '../utils/api.js';
+import { buildAiReply, buildWelcomeMessage, getSuggestedQuestions } from '../utils/aiAssistant.js';
 
 
 const globalFont = '"Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
@@ -34,7 +35,7 @@ const translations = {
     indSector: "Sənaye Sektoru", sysSec: "🔐 Sistem Təhlükəsizliyi", newPass: "Yeni Şifrə", saveBtn: "Dəyişiklikləri Yadda Saxla",
     sysLoc: "⚙️ Sistem Lokalizasiyası", esgLang: "ESG Hesabat Dili", aiNotifyCent: "🔔 AI Ağıllı Bildiriş Mərkəzi",
     logoSeal: "📋 Rəsmi E-Möhür & Loqo İnteqrasiya", logoDesc: "PDF/Excel çıxarışlarında emblem görünməsi üçün sənəd yükləyin.", selectFile: "Fayl Seçin",
-    contactTitle: "📞 Əlaqə & Texniki Dəstək", office: "Mərkəzi Ofis", close: "Bağla", chatPlaceholder: "AI-dan risk analizi tələb et...", avatarLabel: "📸 Profil Şəkli / Müəssisə Loqosu",
+    contactTitle: "📞 Əlaqə & Texniki Dəstək", office: "Mərkəzi Ofis", close: "Bağla", chatPlaceholder: "İstənilən sualınızı yazın...", avatarLabel: "📸 Profil Şəkli / Müəssisə Loqosu",
     aiAnalysisBtn: "🧠 AI Risk Analizi & ESG Tövsiyəsi Al", aiResponseText: "AI təhlil edir... Göstəricilər qorunur və yaşıl zonadadır."
   },
   en: {
@@ -56,7 +57,7 @@ const translations = {
     indSector: "Industrial Sector", sysSec: "🔐 System Security", newPass: "New Password", saveBtn: "Save Changes",
     sysLoc: "⚙️ System Localization", esgLang: "ESG Report Language", aiNotifyCent: "🔔 Smart Notification Center AI",
     logoSeal: "📋 Official E-Seal & Logo Integration", logoDesc: "Upload a document for the emblem to appear in PDF/Excel exports.", selectFile: "Select File",
-    contactTitle: "📞 Contact & Technical Support", office: "Head Office", close: "Close", chatPlaceholder: "Request AI risk analysis...", avatarLabel: "📸 Profile Picture / Enterprise Logo",
+    contactTitle: "📞 Contact & Technical Support", office: "Head Office", close: "Close", chatPlaceholder: "Ask me anything...", avatarLabel: "📸 Profile Picture / Enterprise Logo",
     aiAnalysisBtn: "🧠 Get AI Risk Analysis & ESG Recommendations", aiResponseText: "AI analyzing... Metrics are secure and in the green zone."
   },
   ru: {
@@ -78,7 +79,7 @@ const translations = {
     indSector: "Промышленный Сектор", sysSec: "🔐 Безопасность Системы", newPass: "Новый Пароль", saveBtn: "Сохранить Изменения",
     sysLoc: "⚙️ Локализация Системы", esgLang: "Язык Отчетов ESG", aiNotifyCent: "🔔 Смарт Центр Уведомлений AI",
     logoSeal: "📋 Официальная Э-Печать и Интеграция Логотипа", logoDesc: "Загрузите документ, чтобы эмблема появилась в экспорте PDF/Excel.", selectFile: "Выбрать Файл",
-    contactTitle: "📞 Связь и Техническая Поддержка", office: "Главный Офис", close: "Закрыть", chatPlaceholder: "Запросить анализ рисков AI...", avatarLabel: "📸 Изображение Профиля / Логотип",
+    contactTitle: "📞 Связь и Техническая Поддержка", office: "Главный Офис", close: "Закрыть", chatPlaceholder: "Задайте любой вопрос...", avatarLabel: "📸 Изображение Профиля / Логотип",
     aiAnalysisBtn: "🧠 Получить AI Анализ Рисков и Рекомендации ESG", aiResponseText: "AI анализирует... Показатели в зеленой зоне и защищены."
   }
 };
@@ -107,6 +108,16 @@ const LocalCountUp = ({ to, from = 0, duration = 1.2 }) => {
     return () => clearInterval(counter);
   }, [to, from, duration]);
   return <span ref={ref}>{from}</span>;
+};
+
+const renderRichText = (text) => {
+  const parts = String(text || '').split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index} style={{ color: '#00FF87' }}>{part.slice(2, -2)}</strong>;
+    }
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
 };
 
 const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
@@ -203,7 +214,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               'Enerji (kWh)': latestData.energyConsumption,
               'Su (m³)': latestData.waterUsage
             }];
-            if (updated.length > 7) updated.shift();
+            if (updated.length > 12) updated.shift();
             return updated;
           });
         }
@@ -213,7 +224,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     };
 
     fetchLiveSensorData();
-    const interval = setInterval(fetchLiveSensorData, 5000); 
+    const interval = setInterval(fetchLiveSensorData, 20000); 
     return () => clearInterval(interval);
   }, [token, onLogout, lang]);
 
@@ -305,33 +316,16 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     }
   };
 
-  const generateAiEsgAnalysis = () => {
-    if (lang === 'az') {
-      return `📊 **BlueGreen AI - Sənaye Risk Analiz Hesabatı [${profileName.toUpperCase()}]:**\n\n` +
-             `⚠️ **Aşkar Olunan Kritik Risk:** Cari logistika zəncirində dizel intensivliyi artmışdır. Səhifə yenilənən zaman Scope 1 emissiyanız limit xəttini (50 t) keçərək 61%-ə çata bilər.\n\n` +
-             `🌱 **ESG Tövsiyəsi:**\n` +
-             `1. Tullantıların utilizasiya payını (%76) qorumaq üçün rəqəmsal sensor izləməsini aktiv saxlayın.\n` +
-             `2. GRI Uyğunluq indeksiniz (%98.5) çox yüksəkdir. Şəffaflığı PDF hesabat ixracı ilə rəsmiləşdirin.`;
-    } else if (lang === 'en') {
-      return `📊 **BlueGreen AI - Industrial Risk Analysis Report [${profileName.toUpperCase()}]:**\n\n` +
-             `⚠️ **Critical Risk Detected:** Diesel intensity in the current supply chain has increased. Your Scope 1 emission could exceed the target limit line (50 t), reaching 61% during peaks.\n\n` +
-             `🌱 **ESG Recommendations:**\n` +
-             `1. Maintain digital sensor tracking to protect the waste recycling rate (76%).\n` +
-             `2. Your GRI Compliance index (98.5%) is excellent. Formally secure it using PDF export.`;
-    } else {
-      return `📊 **BlueGreen AI - Промышленный отчет об анализе рисков [${profileName.toUpperCase()}]:**\n\n` +
-             `⚠️ **Критический риск:** Интенсивность дизельного топлива в логистике увеличилась. Выбросы Scope 1 могут превысить целевую линию лимита (50 т), достигнув 61%.\n\n` +
-             `🌱 **Рекомендации ESG:**\n` +
-             `1. Сохраняйте цифровой трекинг датчиков для защиты индекса утилизации отходов (76%).\n` +
-             `2. Ваш индекс соответствия GRI (98.5%) превосходен. Зафиксируйте прозрачность экспортом PDF.`;
-    }
-  };
-
   useEffect(() => {
-    setChatMessages([
-      { sender: 'ai', text: generateAiEsgAnalysis() }
-    ]);
-  }, [lang, profileName]);
+    setChatMessages(prev => {
+      // Söhbət hələ başlamayıbsa, salamlaşma mesajını canlı göstəricilərlə
+      // yeniləyirik. İstifadəçi sual verəndən sonra tarixçə qorunur.
+      if (prev.length <= 1 && (!prev[0] || prev[0].sender === 'ai')) {
+        return [{ sender: 'ai', text: buildWelcomeMessage({ lang, profileName, metrics }) }];
+      }
+      return prev;
+    });
+  }, [lang, profileName, metrics]);
 
   const get12Months = () => {
     if (lang === 'en') return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -401,14 +395,29 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     }
   };
 
+  const sendQuestion = (rawQuestion) => {
+    const question = String(rawQuestion || '').trim();
+    if (!question) return;
+
+    setChatMessages(prev => [...prev, { sender: 'user', text: question }]);
+    setChatInput('');
+
+    setTimeout(() => {
+      const answer = buildAiReply({
+        question,
+        lang,
+        profileName,
+        metrics,
+        reportData: reportData12Months,
+        activeTab
+      });
+      setChatMessages(prev => [...prev, { sender: 'ai', text: answer }]);
+    }, 450);
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
-    setChatMessages(prev => [...prev, { sender: 'user', text: chatInput }]);
-    setChatInput('');
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { sender: 'ai', text: t.aiResponseText }]);
-    }, 700);
+    sendQuestion(chatInput);
   };
 
   return (
@@ -834,7 +843,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               <span style={{ fontSize: '1.3rem' }}>🧠</span>
               <div>
                 <strong style={{ fontSize: '0.95rem' }}>BlueGreen AI Core</strong>
-                <div style={{ fontSize: '0.75rem', color: '#00FF87' }}>Industrial Risk Analyzer v2.4</div>
+                <div style={{ fontSize: '0.75rem', color: '#00FF87' }}>
+                  {lang === 'en' ? 'Universal ESG Assistant v3.0' : lang === 'ru' ? 'Универсальный ESG-помощник v3.0' : 'Universal ESG Köməkçisi v3.0'}
+                </div>
               </div>
             </div>
             <button onClick={() => setIsChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#8a93a6', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
@@ -843,10 +854,25 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           <div style={{ flex: 1, padding: '1.2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem', lineHeight: '1.4' }}>
             {chatMessages.map((msg, i) => (
               <div key={i} style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', background: msg.sender === 'user' ? '#00D2FF' : 'rgba(255,255,255,0.03)', color: msg.sender === 'user' ? '#050816' : '#fff', padding: '0.8rem 1.1rem', borderRadius: '16px', maxWidth: '85%', border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.04)', whiteSpace: 'pre-line' }}>
-                {msg.text}
+                {renderRichText(msg.text)}
               </div>
             ))}
           </div>
+
+          {chatMessages.length <= 1 && (
+            <div style={{ padding: '0 1rem 0.8rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+              {getSuggestedQuestions(lang).map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => sendQuestion(q)}
+                  style={{ padding: '0.45rem 0.7rem', borderRadius: '999px', border: '1px solid rgba(0,210,255,0.3)', background: 'rgba(0,210,255,0.08)', color: '#9fe8ff', fontSize: '0.75rem', cursor: 'pointer' }}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
 
           <form onSubmit={handleSendMessage} style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '0.5rem' }}>
             <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder={t.chatPlaceholder} style={{ flex: 1, padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#fff', outline: 'none', fontSize: '0.9rem' }} />
