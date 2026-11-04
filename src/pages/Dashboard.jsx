@@ -134,12 +134,16 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [profileName, setProfileName] = useState(companyName || localStorage.getItem('bg_company_name') || "BlueGreen Müəssisə");
   const [profileEmail, setProfileEmail] = useState(userEmail || localStorage.getItem('bg_user_email') || "admin@bluegreen.az");
   const [newPass, setNewPass] = useState(''); 
-  const [industrySector, setIndustrySector] = useState('Heavy Industry / Sənaye'); 
+  const [industrySector, setIndustrySector] = useState(() => {
+    try { return localStorage.getItem('bg_industry_sector') || 'Heavy Industry / Sənaye'; }
+    catch { return 'Heavy Industry / Sənaye'; }
+  }); 
   const [avatarSrc, setAvatarSrc] = useState(null);
 
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false); 
+  const [profileToast, setProfileToast] = useState(null);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
   const [isAiTyping, setIsAiTyping] = useState(false);
   
@@ -282,6 +286,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         .star-border-card::after { content: ''; position: absolute; inset: 1px; background: #06091f; border-radius: 19px; z-index: -1; }
         
         @keyframes neonPulse { 0% { box-shadow: 0 0 5px #ff4b4b, inset 0 0 5px #ff4b4b; } 50% { box-shadow: 0 0 20px #ff2222, inset 0 0 10px #ff2222; border-color: #ff2222; } 100% { box-shadow: 0 0 5px #ff4b4b, inset 0 0 5px #ff4b4b; } }
+         @keyframes profileToastFade { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
         .neon-alert-box { animation: neonPulse 2s infinite alternate; border: 1px solid #ff4b4b; background: rgba(255, 75, 75, 0.15) !important; backdrop-filter: blur(15px); }
 
         .esg-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; text-align: left; font-size: 0.95rem; }
@@ -341,7 +346,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       });
 
       if (response.status === 401 || response.status === 403) {
-        alert(lang === 'az' ? "🔒 Səlahiyyət müddəti bitib." : "🔒 Unauthorized session.");
+        setProfileToast({ type: 'error', message: lang === 'az' ? "🔒 Səlahiyyət müddəti bitib." : "🔒 Unauthorized session." });
         onLogout();
         return;
       }
@@ -349,15 +354,16 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       if (response.ok) {
         localStorage.setItem('bg_company_name', profileName);
         localStorage.setItem('bg_user_email', profileEmail);
-        alert(lang === 'az' ? "✓ Dəyişikliklər uğurla yadda saxlanıldı!" : "✓ Saved successfully!");
+        localStorage.setItem('bg_industry_sector', industrySector);
+        setProfileToast({ type: 'success', message: lang === 'az' ? "✓ Dəyişikliklər uğurla yadda saxlanıldı!" : "✓ Saved successfully!" });
         setNewPass('');
       } else {
         const errData = await response.json().catch(() => ({}));
-        alert(errData.message || "Xəta baş verdi.");
+        setProfileToast({ type: 'error', message: errData.message || (lang === 'az' ? "Xəta baş verdi." : "An error occurred.") });
       }
     } catch (error) {
       console.error("Profil yenilənərkən xəta:", error);
-      alert("Şəbəkə xətası baş verdi.");
+      setProfileToast({ type: 'error', message: lang === 'az' ? "Şəbəkə xətası baş verdi." : "Network error occurred." });
     }
   };
 
@@ -371,6 +377,18 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       return prev;
     });
   }, [lang, profileName, metrics]);
+
+  // Sənaye sektorunu yadda saxlayırıq.
+  useEffect(() => {
+    try { localStorage.setItem('bg_industry_sector', industrySector); } catch {}
+  }, [industrySector]);
+
+  // Profil toast-u 3 saniyə sonra avtomatik bağlanır.
+  useEffect(() => {
+    if (!profileToast) return;
+    const timer = setTimeout(() => setProfileToast(null), 3200);
+    return () => clearTimeout(timer);
+  }, [profileToast]);
 
   const get12Months = () => {
     if (lang === 'en') return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -975,6 +993,67 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder={t.chatPlaceholder} style={{ flex: 1, padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#fff', outline: 'none', fontSize: '0.9rem' }} />
             <button type="submit" style={{ padding: '0 1rem', background: '#00D2FF', color: '#050816', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>➔</button>
           </form>
+        </div>
+      )}
+
+      {profileToast && (
+        <div
+          onClick={() => setProfileToast(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 20000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(5, 8, 22, 0.55)',
+            backdropFilter: 'blur(6px)',
+            animation: 'profileToastFade 0.2s ease'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              minWidth: '320px',
+              maxWidth: '90vw',
+              padding: '1.6rem 2rem',
+              borderRadius: '20px',
+              background: profileToast.type === 'success'
+                ? 'linear-gradient(135deg, rgba(0, 255, 135, 0.12), rgba(0, 210, 255, 0.12))'
+                : 'linear-gradient(135deg, rgba(255, 75, 75, 0.15), rgba(255, 187, 0, 0.12))',
+              border: profileToast.type === 'success'
+                ? '1px solid rgba(0, 255, 135, 0.45)'
+                : '1px solid rgba(255, 75, 75, 0.45)',
+              boxShadow: profileToast.type === 'success'
+                ? '0 12px 40px rgba(0, 255, 135, 0.25)'
+                : '0 12px 40px rgba(255, 75, 75, 0.25)',
+              color: '#fff',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            <div style={{ fontSize: '2.2rem', marginBottom: '0.6rem' }}>
+              {profileToast.type === 'success' ? '✓' : '⚠'}
+            </div>
+            <div style={{ fontSize: '1rem', fontWeight: 600, lineHeight: 1.4 }}>
+              {profileToast.message}
+            </div>
+            <button
+              onClick={() => setProfileToast(null)}
+              style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1.2rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(255,255,255,0.06)',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.85rem'
+              }}
+            >
+              {lang === 'az' ? 'Bağla' : lang === 'ru' ? 'Закрыть' : 'Close'}
+            </button>
+          </div>
         </div>
       )}
 
