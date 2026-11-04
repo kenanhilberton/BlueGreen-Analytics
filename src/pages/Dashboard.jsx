@@ -10,6 +10,7 @@ import {
 import { exportToExcel, exportToPDF } from '../utils/exportFiles.js';
 import { API_BASE_URL } from '../utils/api.js';
 import { buildAiReply, buildWelcomeMessage, getSuggestedQuestions } from '../utils/aiAssistant.js';
+import CarbonGlobe from '../components/CarbonGlobe.jsx';
 
 
 const SECTOR_PROFILES = {
@@ -874,6 +875,16 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                         </div>
                       );
                     })}
+
+                  </div>
+
+                  {/* 3D Karbon Qlobusu */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>🌍 3D Karbon Qlobusu</h3>
+                    <div style={{ fontSize: '0.8rem', color: '#8a93a6', marginBottom: '0.8rem' }}>
+                      Canlı emissiya nöqtələri — qlobus fırlanır, nöqtələr pulsasiya edir. (Nöqtə sayı CO₂ səviyyəsinə proporsionaldır.)
+                    </div>
+                    <CarbonGlobe co2={metrics.co2} />
                   </div>
                 </div>
               </div>
