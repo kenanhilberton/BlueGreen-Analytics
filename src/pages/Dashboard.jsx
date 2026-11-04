@@ -153,6 +153,11 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [profileToast, setProfileToast] = useState(null);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  // Yeni xüsusiyyətlər üçün state-lər
+  const [carbonBudget, setCarbonBudget] = useState(100);
+  const [scenarioSolar, setScenarioSolar] = useState(30);
+  const [scenarioEfficiency, setScenarioEfficiency] = useState(15);
+  const [voiceListening, setVoiceListening] = useState(false);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
   const [offsetCo2, setOffsetCo2] = useState(44);
   
@@ -880,7 +885,40 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
                   </div>
 
-                  {/* 3D Karbon Qlobusu */}
+                  {/* Karbon büdcəsi */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#FFBB00', fontWeight: 600 }}>💰 Karbon Büdcəsi & Burn Rate</h3>
+                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Aylıq karbon limiti (tCO₂e)</label>
+                        <input type="number" min="1" value={carbonBudget} onChange={(e) => setCarbonBudget(Number(e.target.value) || 1)} className="profile-input" style={{ width: '100%' }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        {(() => {
+                          const used = metrics.co2;
+                          const pct = Math.min(100, (used / carbonBudget) * 100);
+                          const remaining = Math.max(0, carbonBudget - used);
+                          const burnRate = (used / 30).toFixed(2);
+                          const color = pct > 90 ? '#ff4b4b' : pct > 70 ? '#ffbb00' : '#00FF87';
+                          return (
+                            <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+                                <span style={{ color: '#b0b7c6' }}>İstifadə: {used} / {carbonBudget} tCO₂e</span>
+                                <span style={{ color, fontWeight: 700 }}>{pct.toFixed(0)}%</span>
+                              </div>
+                              <div style={{ height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: pct + '%', background: 'linear-gradient(90deg, ' + color + ', ' + color + '88)', borderRadius: '6px', transition: 'width 0.5s ease' }} />
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#8a93a6', marginTop: '0.4rem' }}>
+                                <span>Qalan: {remaining.toFixed(1)} tCO₂e</span>
+                                <span>Burn rate: {burnRate} t/gün</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>}
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>🌍 3D Karbon Qlobusu</h3>
                     <div style={{ fontSize: '0.8rem', color: '#8a93a6', marginBottom: '0.8rem' }}>
@@ -888,9 +926,244 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                     </div>
                     <CarbonGlobe co2={metrics.co2} />
                   </div>
+
+                  {/* Nə baş verər? ssenari analizi */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(157,78,221,0.2)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#9d4edd', fontWeight: 600 }}>🔮 "Nə baş verər?" Ssenari Analizi</h3>
+                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Günəş paneli payı (%)</label>
+                        <input type="range" min="0" max="100" value={scenarioSolar} onChange={(e) => setScenarioSolar(Number(e.target.value))} style={{ width: '100%', accentColor: '#FFBB00' }} />
+                        <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#FFBB00', fontWeight: 600 }}>{scenarioSolar}%</div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Enerji səmərəliliyi artımı (%)</label>
+                        <input type="range" min="0" max="50" value={scenarioEfficiency} onChange={(e) => setScenarioEfficiency(Number(e.target.value))} style={{ width: '100%', accentColor: '#00D2FF' }} />
+                        <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#00D2FF', fontWeight: 600 }}>{scenarioEfficiency}%</div>
+                      </div>
+                    </div>
+                    {(() => {
+                      const solarEffect = (scenarioSolar / 100) * 0.35;
+                      const effEffect = (scenarioEfficiency / 100) * 0.25;
+                      const totalReduction = (solarEffect + effEffect) * 100;
+                      const newCo2 = Math.round(metrics.co2 * (1 - solarEffect - effEffect));
+                      const newEnergy = Math.round(metrics.energy * (1 - effEffect));
+                      const savedCo2 = metrics.co2 - newCo2;
+                      const savedCost = (savedCo2 * 20).toFixed(0);
+                      return (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.8rem' }}>
+                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(0,255,135,0.06)', border: '1px solid rgba(0,255,135,0.2)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>CO₂ azalması</div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00FF87' }}>-{totalReduction.toFixed(0)}%</div>
+                          </div>
+                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(0,210,255,0.06)', border: '1px solid rgba(0,210,255,0.2)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>Yeni CO₂</div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00D2FF' }}>{newCo2} t</div>
+                          </div>
+                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,187,0,0.06)', border: '1px solid rgba(255,187,0,0.2)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>Qənaət</div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFBB00' }}>${savedCost}</div>
+                          </div>
+                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(157,78,221,0.06)', border: '1px solid rgba(157,78,221,0.2)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>Yeni Enerji</div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#9d4edd' }}>{newEnergy} kWh</div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,75,75,0.2)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#ff7676', fontWeight: 600 }}>🚨 AI Anomaliya Aşkarlanması</h3>
+                    {(() => {
+                      const last = historyData[historyData.length - 1]?.['CO₂ (Ton)'] || 0;
+                      const avg = historyData.reduce((a, d) => a + (d['CO₂ (Ton)'] || 0), 0) / (historyData.length || 1);
+                      const threshold = avg * 1.25;
+                      const isAnomaly = last > threshold;
+                      return (
+                        <div>
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
+                            <div style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '12px', background: isAnomaly ? 'rgba(255,75,75,0.1)' : 'rgba(0,255,135,0.06)', border: isAnomaly ? '1px solid rgba(255,75,75,0.3)' : '1px solid rgba(0,255,135,0.2)' }}>
+                              <div style={{ fontSize: '0.75rem', color: '#8a93a6' }}>Son oxuma</div>
+                              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: isAnomaly ? '#ff7676' : '#00FF87' }}>{last.toFixed(1)} tCO₂e</div>
+                            </div>
+                            <div style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                              <div style={{ fontSize: '0.75rem', color: '#8a93a6' }}>Ortalama</div>
+                              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00D2FF' }}>{avg.toFixed(1)} tCO₂e</div>
+                            </div>
+                            <div style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                              <div style={{ fontSize: '0.75rem', color: '#8a93a6' }}>Hədd (1.25×)</div>
+                              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFBB00' }}>{threshold.toFixed(1)} tCO₂e</div>
+                            </div>
+                          </div>
+                          {isAnomaly ? (
+                            <div style={{ padding: '0.8rem 1rem', borderRadius: '12px', background: 'rgba(255,75,75,0.1)', border: '1px solid rgba(255,75,75,0.3)', color: '#ff7676', fontSize: '0.85rem' }}>
+                              Anomaliya aşkarlandı! Son oxuma ortalamadan {((last / avg - 1) * 100).toFixed(0)}% yüksəkdir. Tövsiyə: istehsal xətlərini və filtr sistemlərini yoxlayın.
+                            </div>
+                          ) : (
+                            <div style={{ padding: '0.8rem 1rem', borderRadius: '12px', background: 'rgba(0,255,135,0.06)', border: '1px solid rgba(0,255,135,0.2)', color: '#00FF87', fontSize: '0.85rem' }}>
+                              Göstəricilər normal diapazondadır. Anomaliya aşkarlanmadı.
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Sürdürübilirlik hədəfləri (OKR) */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>🎯 Sürdürübilirlik Hədəfləri (OKR)</h3>
+                    {[
+                      { label: 'CO₂ emissiyasını 20% azalt', current: metrics.co2, target: 40, unit: 'tCO₂e', lowerBetter: true },
+                      { label: 'Yaşıl enerji payını 50%-ə çatdır', current: 18.4, target: 50, unit: '%', lowerBetter: false },
+                      { label: 'Su istehlakını 15% azalt', current: metrics.water, target: 2800, unit: 'm³', lowerBetter: true },
+                      { label: 'Tullantı utilizasiyasını 90%-ə çatdır', current: metrics.waste, target: 90, unit: '%', lowerBetter: false },
+                      { label: 'HSE insidentsiz 365 gün', current: metrics.hse, target: 365, unit: 'gün', lowerBetter: false },
+                      { label: 'Heyət təlimi 24 saat', current: metrics.training, target: 24, unit: 'saat', lowerBetter: false }
+                    ].map((g, i) => {
+                      const progress = g.lowerBetter
+                        ? Math.min(100, Math.max(0, ((g.target - g.current) / (g.target * 0.5)) * 100 + 50))
+                        : Math.min(100, (g.current / g.target) * 100);
+                      const done = g.lowerBetter ? g.current <= g.target : g.current >= g.target;
+                      return (
+                        <div key={i} style={{ marginBottom: '0.9rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.3rem' }}>
+                            <span style={{ color: '#b0b7c6' }}>{g.label}</span>
+                            <span style={{ color: done ? '#00FF87' : '#8a93a6', fontWeight: 600, fontSize: '0.75rem' }}>
+                              {done ? '✓ Tamamlandı' : g.current + ' / ' + g.target + ' ' + g.unit}
+                            </span>
+                          </div>
+                          <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: progress + '%', background: done ? 'linear-gradient(90deg, #00FF87, #00D2FF)' : 'linear-gradient(90deg, #00D2FF, #9d4edd)', borderRadius: '4px', transition: 'width 0.6s ease' }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
+
+
+            {/* Departament üzrə emissiya */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>Departament Uzre Emissiya</h3>
+              {[
+                { name: 'Istehsalat xetti A', value: 42, color: '#ff4b4b' },
+                { name: 'Istehsalat xetti B', value: 28, color: '#ffbb00' },
+                { name: 'Enerji sistemleri', value: 15, color: '#00D2FF' },
+                { name: 'Logistika ve neqliyyat', value: 10, color: '#9d4edd' },
+                { name: 'Ofis ve infrastruktur', value: 5, color: '#00FF87' }
+              ].map((d, i) => (
+                <div key={i} style={{ marginBottom: '0.7rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                    <span style={{ color: '#b0b7c6' }}>{d.name}</span>
+                    <span style={{ color: '#fff', fontWeight: 600 }}>{Math.round(metrics.co2 * d.value / 100)} t ({d.value}%)</span>
+                  </div>
+                  <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: d.value + '%', background: d.color, borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Risk matrisi */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#ff4b4b', fontWeight: 600 }}>Iqlim Risk Matrisi</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', maxWidth: '300px', margin: '0 auto' }}>
+                {[1,2,2,3,4,1,2,3,3,4,2,3,3,4,4,2,3,4,4,5,3,4,4,5,5].map((val, i) => {
+                  const colors = ['#00FF87', '#FFBB00', '#ff8c00', '#ff4b4b', '#cc0000'];
+                  return (
+                    <div key={i} style={{ aspectRatio: '1', borderRadius: '6px', background: colors[val-1], opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#fff' }}>
+                      {val}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.8rem', marginTop: '0.8rem', fontSize: '0.7rem', color: '#8a93a6', flexWrap: 'wrap' }}>
+                <span>Asagi</span><span>Orta</span><span>Yuksak</span><span>Kritik</span>
+              </div>
+            </div>
+
+            {/* Techizatci ESG reytinqi */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#9d4edd', fontWeight: 600 }}>Techizatci ESG Reytinqi</h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="esg-table" style={{ fontSize: '0.85rem' }}>
+                  <thead><tr><th>Techizatci</th><th>ESG Bal</th><th>CO2 (t)</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {[
+                      { name: 'Baku Steel Supply', score: 82, co2: 120, status: 'Yaxsi' },
+                      { name: 'Caspian Logistics', score: 74, co2: 85, status: 'Orta' },
+                      { name: 'GreenTech Materials', score: 91, co2: 45, status: 'Ela' },
+                      { name: 'AzEnergy Corp', score: 68, co2: 200, status: 'Zaif' },
+                      { name: 'EcoPackaging Ltd', score: 88, co2: 30, status: 'Yaxsi' }
+                    ].map((s, i) => (
+                      <tr key={i}>
+                        <td>{s.name}</td>
+                        <td style={{ color: s.score >= 85 ? '#00FF87' : s.score >= 70 ? '#FFBB00' : '#ff4b4b', fontWeight: 700 }}>{s.score}/100</td>
+                        <td>{s.co2} t</td>
+                        <td style={{ color: s.status === 'Ela' ? '#00FF87' : s.status === 'Yaxsi' ? '#00D2FF' : s.status === 'Orta' ? '#FFBB00' : '#ff4b4b' }}>{s.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Melumat keyfiyyeti */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>Melumat Keyfiyyeti ve Audit Izi</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.8rem' }}>
+                {[
+                  { label: 'Melumat dolulugu', value: 94, color: '#00FF87' },
+                  { label: 'Sensor ehatasi', value: 87, color: '#00D2FF' },
+                  { label: 'Manual giris', value: 12, color: '#FFBB00' },
+                  { label: 'Audit hazirligi', value: 91, color: '#9d4edd' }
+                ].map((q, i) => (
+                  <div key={i} style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#8a93a6', marginBottom: '0.3rem' }}>{q.label}</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: q.color }}>{q.value}%</div>
+                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', marginTop: '0.4rem', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: q.value + '%', background: q.color, borderRadius: '2px' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: '#8a93a6' }}>
+                Son yenileme: {new Date().toLocaleString('az-AZ')} - Audit izi aktivdir
+              </div>
+            </div>
+
+            {/* Sesli idareetme */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,210,255,0.2)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>Sesli Idareetme</h3>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => {
+                    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+                      alert('Bu brauzer ses tanima desteklemir.');
+                      return;
+                    }
+                    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const rec = new SR();
+                    rec.lang = lang === 'az' ? 'az-AZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
+                    rec.onstart = () => setVoiceListening(true);
+                    rec.onresult = (e) => {
+                      const text = e.results[0][0].transcript;
+                      sendQuestion(text);
+                    };
+                    rec.onend = () => setVoiceListening(false);
+                    rec.start();
+                  }}
+                  style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', border: 'none', background: voiceListening ? 'linear-gradient(135deg, #ff4b4b, #ff7676)' : 'linear-gradient(135deg, #00D2FF, #00FF87)', color: '#050816', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+                >
+                  {voiceListening ? 'Dinleyir...' : 'Sesli sual ver'}
+                </button>
+                <span style={{ fontSize: '0.8rem', color: '#8a93a6' }}>
+                  Mikrofon ile sual verin - AI avtomatik cavab verecek
+                </span>
+              </div>
+            </div>
 
             {activeTab === 'env' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
