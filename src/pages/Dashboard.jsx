@@ -19,6 +19,8 @@ const SECTOR_PROFILES = {
   'Oil & Gas Refinery': { co2: 1.7, energy: 1.5, water: 1.4, waste: 0.8, hse: 0.95, training: 0.9 }
 };
 
+const globalFont = '"Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
+
 const INDUSTRY_BENCHMARKS = {
   'Heavy Industry / Sənaye': { co2: 50, energy: 60, water: 3000, waste: 70, hse: 310, training: 16, name: 'Sənaye ortalaması' },
   'Green Energy Production': { co2: 15, energy: 40, water: 1000, waste: 85, hse: 340, training: 22, name: 'Yaşıl enerji ortalaması' },
