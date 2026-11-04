@@ -12,6 +12,12 @@ import { API_BASE_URL } from '../utils/api.js';
 import { buildAiReply, buildWelcomeMessage, getSuggestedQuestions } from '../utils/aiAssistant.js';
 
 
+const SECTOR_PROFILES = {
+  'Heavy Industry / Sənaye': { co2: 1, energy: 1, water: 1, waste: 1, hse: 1, training: 1 },
+  'Green Energy Production': { co2: 0.4, energy: 0.7, water: 0.35, waste: 1.15, hse: 1.1, training: 1.3 },
+  'Oil & Gas Refinery': { co2: 1.7, energy: 1.5, water: 1.4, waste: 0.8, hse: 0.95, training: 0.9 }
+};
+
 const globalFont = '"Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
 const darkNeonImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23050816'/><stop offset='40%' stop-color='%230b113a'/><stop offset='80%' stop-color='%231b114d'/><stop offset='100%' stop-color='%23050816'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/><circle cx='300' cy='200' r='500' fill='%231a2eb5' opacity='0.25' filter='blur(120px)'/><circle cx='1600' cy='800' r='600' fill='%2356118c' opacity='0.2' filter='blur(150px)'/></svg>";
 
@@ -178,14 +184,15 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
         if (res.ok) {
           const latestData = await res.json();
+          const profile = SECTOR_PROFILES[industrySector] || SECTOR_PROFILES['Heavy Industry / Sənaye'];
 
           setMetrics({
-            co2: Math.round((latestData.co2Emission || 44)),
-            energy: Math.round((latestData.energyConsumption || 48)),
-            water: latestData.waterUsage || 3500,
-            waste: latestData.wasteRecycled || 76,
-            hse: latestData.hseIncidents || 320,
-            training: latestData.trainingHours || 18
+            co2: Math.round((latestData.co2Emission || 44) * profile.co2),
+            energy: Math.round((latestData.energyConsumption || 48) * profile.energy),
+            water: Math.round((latestData.waterUsage || 3500) * profile.water),
+            waste: Number(((latestData.wasteRecycled || 76) * profile.waste).toFixed(1)),
+            hse: Math.round((latestData.hseIncidents || 320) * profile.hse),
+            training: Number(((latestData.trainingHours || 18) * profile.training).toFixed(1))
           });
 
           if (latestData.co2Emission > 75) {
@@ -213,9 +220,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           setHistoryData(prev => {
             const updated = [...prev, {
               name: timeString,
-              'CO₂ (Ton)': latestData.co2Emission,
-              'Enerji (kWh)': latestData.energyConsumption,
-              'Su (m³)': latestData.waterUsage
+              'CO₂ (Ton)': Number((latestData.co2Emission * profile.co2).toFixed(2)),
+              'Enerji (kWh)': Number((latestData.energyConsumption * profile.energy).toFixed(2)),
+              'Su (m³)': Math.round(latestData.waterUsage * profile.water)
             }];
             if (updated.length > 12) updated.shift();
             return updated;
@@ -229,7 +236,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     fetchLiveSensorData();
     const interval = setInterval(fetchLiveSensorData, 20000); 
     return () => clearInterval(interval);
-  }, [token, onLogout, lang]);
+  }, [token, onLogout, lang, industrySector]);
 
   // Real LLM provayderinin qoşulub-qoşulmadığını yoxlayırıq.
   useEffect(() => {
