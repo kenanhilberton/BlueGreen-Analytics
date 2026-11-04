@@ -152,7 +152,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
-  const [offsetCo2, setOffsetCo2] = useState(metrics.co2);
+  const [offsetCo2, setOffsetCo2] = useState(44);
   
   const [activeAlert, setActiveAlert] = useState(null);
 
