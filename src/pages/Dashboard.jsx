@@ -158,6 +158,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [scenarioSolar, setScenarioSolar] = useState(30);
   const [scenarioEfficiency, setScenarioEfficiency] = useState(15);
   const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
   const [offsetCo2, setOffsetCo2] = useState(44);
   
@@ -312,6 +313,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
          .profile-select:hover { border-color: rgba(0,210,255,0.6); background-color: rgba(15,22,52,0.98); }
          .profile-select:focus { border-color: #00D2FF; box-shadow: 0 0 0 3px rgba(0,210,255,0.18); }
          .profile-select option { background: #0a0f24; color: #fff; padding: 0.5rem 0.75rem; }
+          @media (max-width: 768px) { .mobile-bottom-nav { display: flex !important; } }
 
         /* TELEFON VƏ PLANŞET RESPONSİVLİYİ */
         @media (max-width: 1024px) {
@@ -431,6 +433,22 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       return prev;
     });
   }, [lang, profileName, metrics]);
+
+  // Səsli cavab: yeni AI cavabı gəldikdə və voiceMode aktivdirsə, səslə oxu.
+  useEffect(() => {
+    if (!voiceMode) return;
+    const last = chatMessages[chatMessages.length - 1];
+    if (last && last.sender === 'ai') {
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(last.text.replace(/\*\*/g, ''));
+        utter.lang = lang === 'az' ? 'az-AZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        window.speechSynthesis.speak(utter);
+      } catch (e) { console.warn('TTS xətası:', e.message); }
+    }
+  }, [chatMessages, voiceMode, lang]);
 
   // Karbon kompensasiya kalkulyatoru üçün cari CO₂ ilə sinxronizasiya.
   useEffect(() => {
@@ -707,7 +725,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
           <main style={{ padding: '2.5rem', flex: 1, overflowY: 'auto' }}>
             {activeTab === 'overview' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: '800', margin: 0, background: 'linear-gradient(to right, #fff, #8a93a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -1159,14 +1177,17 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                 >
                   {voiceListening ? 'Dinleyir...' : 'Sesli sual ver'}
                 </button>
-                <span style={{ fontSize: '0.8rem', color: '#8a93a6' }}>
-                  Mikrofon ile sual verin - AI avtomatik cavab verecek
-                </span>
+                <button
+                  onClick={() => setVoiceMode(!voiceMode)}
+                  style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', border: '1px solid rgba(0,210,255,0.3)', background: voiceMode ? 'rgba(0,255,135,0.15)' : 'rgba(255,255,255,0.04)', color: voiceMode ? '#00FF87' : '#8a93a6', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+                >
+                  {voiceMode ? '🔊 Səsli cavab: AÇIQ' : '🔇 Səsli cavab: BAĞLI'}
+                </button>
               </div>
             </div>
 
             {activeTab === 'env' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
                     <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.waterCons}</div>
@@ -1184,7 +1205,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
                   <h3 style={{ fontSize: '1.05rem', margin: '0 0 1.5rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.segmentTitle}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ width: '220px', height: '220px' }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -1238,7 +1259,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             )}
 
             {activeTab === 'social' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '20px' }}>
                     <div style={{ color: '#8a93a6', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t.hseDays}</div>
@@ -1300,7 +1321,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             )}
 
             {activeTab === 'gov' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
                   <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.radarTitle}</h3>
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '320px' }}>
@@ -1346,10 +1367,10 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             )}
 
             {activeTab === 'profile' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0 }}>{t.profTitle}</h2>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#00D2FF', fontWeight: '600' }}>{t.corpIdentity}</h3>
                     
@@ -1397,7 +1418,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                   <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#9d4edd', fontWeight: '600' }}>{t.logoSeal}</h3>
                   <p style={{ fontSize: '0.85rem', color: '#8a93a6', margin: 0 }}>{t.logoDesc}</p>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.85rem', color: '#b0b7c6' }}>{t.avatarLabel}</span>
                       <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ color: '#8a93a6', fontSize: '0.85rem' }} />
@@ -1533,6 +1554,26 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           </div>
         </div>
       )}
+
+      {/* Mobil alt naviqasiya */}
+      <div className="mobile-bottom-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, background: 'rgba(5, 8, 22, 0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'none', justifyContent: 'space-around', padding: '0.5rem 0', paddingBottom: 'env(safe-area-inset-bottom, 0.5rem)' }}>
+        {[
+          { id: 'overview', icon: '📊', label: 'Panel' },
+          { id: 'env', icon: '🌱', label: 'Ekoloji' },
+          { id: 'social', icon: '🤝', label: 'Sosial' },
+          { id: 'gov', icon: '⚖️', label: 'İdarəetmə' },
+          { id: 'profile', icon: '👤', label: 'Profil' }
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem', background: 'transparent', border: 'none', color: activeTab === item.id ? '#00D2FF' : '#6c7a9c', cursor: 'pointer', padding: '0.3rem 0.5rem', fontSize: '0.65rem', fontWeight: activeTab === item.id ? 700 : 500 }}
+          >
+            <span style={{ fontSize: '1.3rem' }}>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
 
       {activeAlert && (
         <div 
