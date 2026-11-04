@@ -157,8 +157,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [carbonBudget, setCarbonBudget] = useState(100);
   const [scenarioSolar, setScenarioSolar] = useState(30);
   const [scenarioEfficiency, setScenarioEfficiency] = useState(15);
-  const [voiceListening, setVoiceListening] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(false);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
   const [offsetCo2, setOffsetCo2] = useState(44);
   
@@ -433,22 +431,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       return prev;
     });
   }, [lang, profileName, metrics]);
-
-  // Səsli cavab: yeni AI cavabı gəldikdə və voiceMode aktivdirsə, səslə oxu.
-  useEffect(() => {
-    if (!voiceMode) return;
-    const last = chatMessages[chatMessages.length - 1];
-    if (last && last.sender === 'ai') {
-      try {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(last.text.replace(/\*\*/g, ''));
-        utter.lang = lang === 'az' ? 'az-AZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
-        utter.rate = 1.0;
-        utter.pitch = 1.0;
-        window.speechSynthesis.speak(utter);
-      } catch (e) { console.warn('TTS xətası:', e.message); }
-    }
-  }, [chatMessages, voiceMode, lang]);
 
   // Karbon kompensasiya kalkulyatoru üçün cari CO₂ ilə sinxronizasiya.
   useEffect(() => {
@@ -1149,40 +1131,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               </div>
               <div style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: '#8a93a6' }}>
                 Son yenileme: {new Date().toLocaleString('az-AZ')} - Audit izi aktivdir
-              </div>
-            </div>
-
-            {/* Sesli idareetme */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,210,255,0.2)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>Sesli Idareetme</h3>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => {
-                    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-                      alert('Bu brauzer ses tanima desteklemir.');
-                      return;
-                    }
-                    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    const rec = new SR();
-                    rec.lang = lang === 'az' ? 'az-AZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
-                    rec.onstart = () => setVoiceListening(true);
-                    rec.onresult = (e) => {
-                      const text = e.results[0][0].transcript;
-                      sendQuestion(text);
-                    };
-                    rec.onend = () => setVoiceListening(false);
-                    rec.start();
-                  }}
-                  style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', border: 'none', background: voiceListening ? 'linear-gradient(135deg, #ff4b4b, #ff7676)' : 'linear-gradient(135deg, #00D2FF, #00FF87)', color: '#050816', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  {voiceListening ? 'Dinleyir...' : 'Sesli sual ver'}
-                </button>
-                <button
-                  onClick={() => setVoiceMode(!voiceMode)}
-                  style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', border: '1px solid rgba(0,210,255,0.3)', background: voiceMode ? 'rgba(0,255,135,0.15)' : 'rgba(255,255,255,0.04)', color: voiceMode ? '#00FF87' : '#8a93a6', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  {voiceMode ? '🔊 Səsli cavab: AÇIQ' : '🔇 Səsli cavab: BAĞLI'}
-                </button>
               </div>
             </div>
 
