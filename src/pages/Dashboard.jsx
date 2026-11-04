@@ -18,7 +18,11 @@ const SECTOR_PROFILES = {
   'Oil & Gas Refinery': { co2: 1.7, energy: 1.5, water: 1.4, waste: 0.8, hse: 0.95, training: 0.9 }
 };
 
-const globalFont = '"Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
+const INDUSTRY_BENCHMARKS = {
+  'Heavy Industry / Sənaye': { co2: 50, energy: 60, water: 3000, waste: 70, hse: 310, training: 16, name: 'Sənaye ortalaması' },
+  'Green Energy Production': { co2: 15, energy: 40, water: 1000, waste: 85, hse: 340, training: 22, name: 'Yaşıl enerji ortalaması' },
+  'Oil & Gas Refinery': { co2: 80, energy: 90, water: 4000, waste: 55, hse: 300, training: 14, name: 'Neft & Qaz ortalaması' }
+};
 const darkNeonImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23050816'/><stop offset='40%' stop-color='%230b113a'/><stop offset='80%' stop-color='%231b114d'/><stop offset='100%' stop-color='%23050816'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/><circle cx='300' cy='200' r='500' fill='%231a2eb5' opacity='0.25' filter='blur(120px)'/><circle cx='1600' cy='800' r='600' fill='%2356118c' opacity='0.2' filter='blur(150px)'/></svg>";
 
 const translations = {
@@ -144,6 +148,8 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [chatMessages, setChatMessages] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false); 
   const [profileToast, setProfileToast] = useState(null);
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
   const [offsetCo2, setOffsetCo2] = useState(metrics.co2);
   
@@ -328,6 +334,46 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       document.head.appendChild(styleElement);
     }
   }, []);
+
+  const generateAiReport = async () => {
+    setIsGeneratingReport(true);
+    const activeToken = token || localStorage.getItem('esg_token');
+    const prompt = lang === 'az'
+      ? `Müəssisə üçün qısa icraçı ESG hesabatı hazırla. Cari göstəricilər: CO₂ ${metrics.co2} tCO₂e, Enerji ${metrics.energy} kWh, Su ${metrics.water} m³, Tullantı util. ${metrics.waste}%, HSE ${metrics.hse} gün, Təlim ${metrics.training} saat. Sektor: ${industrySector}. 5-7 bənddə əsas nəticələr, risklər və tövsiyələr ver.`
+      : lang === 'ru'
+      ? `Подготовь краткий исполнительный ESG-отчёт. Показатели: CO₂ ${metrics.co2}, Энергия ${metrics.energy}, Вода ${metrics.water}, Утилизация ${metrics.waste}%, HSE ${metrics.hse} дней, Обучение ${metrics.training} ч. Сектор: ${industrySector}. 5-7 пунктов: итоги, риски, рекомендации.`
+      : `Prepare a short executive ESG report. Metrics: CO₂ ${metrics.co2} tCO₂e, Energy ${metrics.energy} kWh, Water ${metrics.water} m³, Waste recycling ${metrics.waste}%, HSE ${metrics.hse} days, Training ${metrics.training} h. Sector: ${industrySector}. 5-7 bullets: key results, risks, recommendations.`;
+
+    let text = '';
+    if (aiMeta.configured && activeToken) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/ai/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${activeToken}` },
+          body: JSON.stringify({ message: prompt, lang, context: { companyName: profileName, metrics, activeTab: 'overview', industrySector } })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          text = data.answer || '';
+        }
+      } catch (e) { console.warn(e.message); }
+    }
+    if (!text) {
+      text = `BlueGreen ESG — İcraçı Xülasə\n\nMüəssisə: ${profileName}\nSektor: ${industrySector}\n\nCari göstəricilər:\n- CO₂: ${metrics.co2} tCO₂e\n- Enerji: ${metrics.energy} kWh\n- Su: ${metrics.water} m³\n- Tullantı util.: ${metrics.waste}%\n- HSE: ${metrics.hse} gün\n- Təlim: ${metrics.training} saat\n\nTövsiyə: Emissiyaları azaltmaq üçün enerji səmərəliliyi və yaşıl enerji investisiyalarını artırın.`;
+    }
+
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `BlueGreen_ESG_Report_${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setIsGeneratingReport(false);
+    setProfileToast({ type: 'success', message: lang === 'az' ? '✓ AI hesabat yükləndi!' : '✓ AI report downloaded!' });
+  };
 
   const handleProfileSave = async () => {
     try {
@@ -667,6 +713,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                     <button onClick={() => exportToPDF(reportData12Months, profileName)} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid rgba(0, 210, 255, 0.2)', color: '#00D2FF', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
                       PDF 📄
                     </button>
+                    <button onClick={generateAiReport} disabled={isGeneratingReport} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 210, 255, 0.2))', border: '1px solid rgba(157, 78, 221, 0.4)', color: '#d4a5ff', fontWeight: '600', cursor: isGeneratingReport ? 'wait' : 'pointer', fontSize: '0.9rem', opacity: isGeneratingReport ? 0.6 : 1 }}>
+                      {isGeneratingReport ? '⏳ Yaradılır...' : '🤖 AI Hesabat'}
+                    </button>
                   </div>
                 </div>
 
@@ -785,6 +834,46 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                       ))}
                       {Math.ceil(offsetCo2 / 0.21) > 40 && <span style={{ color: '#8a93a6', fontSize: '0.85rem', alignSelf: 'center' }}>+{Math.ceil(offsetCo2 / 0.21) - 40} daha...</span>}
                     </div>
+                  </div>
+
+                  {/* Benchmark müqayisəsi */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#FFBB00', fontWeight: 600 }}>📊 Sənaye Benchmark Müqayisəsi</h3>
+                    <div style={{ fontSize: '0.8rem', color: '#8a93a6', marginBottom: '1rem' }}>
+                      Cari göstəriciləriniz {INDUSTRY_BENCHMARKS[industrySector]?.name || 'sənaye'} ilə müqayisəsi
+                    </div>
+                    {[
+                      { key: 'co2', label: 'CO₂ (tCO₂e)', value: metrics.co2, suffix: ' t', lowerBetter: true },
+                      { key: 'energy', label: 'Enerji (kWh)', value: metrics.energy, suffix: ' kWh', lowerBetter: true },
+                      { key: 'water', label: 'Su (m³)', value: metrics.water, suffix: ' m³', lowerBetter: true },
+                      { key: 'waste', label: 'Tullantı util. (%)', value: metrics.waste, suffix: '%', lowerBetter: false },
+                      { key: 'hse', label: 'HSE (gün)', value: metrics.hse, suffix: ' gün', lowerBetter: false },
+                      { key: 'training', label: 'Təlim (saat)', value: metrics.training, suffix: ' s', lowerBetter: false }
+                    ].map((row) => {
+                      const bench = INDUSTRY_BENCHMARKS[industrySector]?.[row.key] || 0;
+                      const max = Math.max(row.value, bench, 1);
+                      const yourPct = (row.value / max) * 100;
+                      const benchPct = (bench / max) * 100;
+                      const better = row.lowerBetter ? row.value <= bench : row.value >= bench;
+                      return (
+                        <div key={row.key} style={{ marginBottom: '0.9rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.3rem' }}>
+                            <span style={{ color: '#b0b7c6' }}>{row.label}</span>
+                            <span style={{ color: better ? '#00FF87' : '#ff7676', fontWeight: 600 }}>
+                              {better ? '✓ Daha yaxşı' : '⚠ Daha pis'}
+                            </span>
+                          </div>
+                          <div style={{ position: 'relative', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${benchPct}%`, background: 'rgba(255,255,255,0.15)', borderRadius: '4px' }} />
+                            <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${yourPct}%`, background: better ? 'linear-gradient(90deg, #00FF87, #00D2FF)' : 'linear-gradient(90deg, #ff7676, #ffbb00)', borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#8a93a6', marginTop: '0.25rem' }}>
+                            <span>Siz: {row.value}{row.suffix}</span>
+                            <span>Orta: {bench}{row.suffix}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
