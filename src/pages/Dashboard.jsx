@@ -888,12 +888,12 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                   {/* Karbon büdcəsi */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#FFBB00', fontWeight: 600 }}>💰 Karbon Büdcəsi & Burn Rate</h3>
-                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                      <div style={{ flex: 1, minWidth: '200px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'center' }}>
+                      <div>
                         <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Aylıq karbon limiti (tCO₂e)</label>
                         <input type="number" min="1" value={carbonBudget} onChange={(e) => setCarbonBudget(Number(e.target.value) || 1)} className="profile-input" style={{ width: '100%' }} />
                       </div>
-                      <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div>
                         {(() => {
                           const used = metrics.co2;
                           const pct = Math.min(100, (used / carbonBudget) * 100);
@@ -981,16 +981,16 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                       const isAnomaly = last > threshold;
                       return (
                         <div>
-                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
-                            <div style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '12px', background: isAnomaly ? 'rgba(255,75,75,0.1)' : 'rgba(0,255,135,0.06)', border: isAnomaly ? '1px solid rgba(255,75,75,0.3)' : '1px solid rgba(0,255,135,0.2)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '0.8rem' }}>
+                            <div style={{ padding: '0.8rem', borderRadius: '12px', background: isAnomaly ? 'rgba(255,75,75,0.1)' : 'rgba(0,255,135,0.06)', border: isAnomaly ? '1px solid rgba(255,75,75,0.3)' : '1px solid rgba(0,255,135,0.2)' }}>
                               <div style={{ fontSize: '0.75rem', color: '#8a93a6' }}>Son oxuma</div>
                               <div style={{ fontSize: '1.3rem', fontWeight: 800, color: isAnomaly ? '#ff7676' : '#00FF87' }}>{last.toFixed(1)} tCO₂e</div>
                             </div>
-                            <div style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                               <div style={{ fontSize: '0.75rem', color: '#8a93a6' }}>Ortalama</div>
                               <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00D2FF' }}>{avg.toFixed(1)} tCO₂e</div>
                             </div>
-                            <div style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                               <div style={{ fontSize: '0.75rem', color: '#8a93a6' }}>Hədd (1.25×)</div>
                               <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFBB00' }}>{threshold.toFixed(1)} tCO₂e</div>
                             </div>
