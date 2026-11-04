@@ -1040,8 +1040,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                     })}
                   </div>
                 </div>
-              </div>
-            )}
 
 
             {/* Departament üzrə emissiya */}
@@ -1133,6 +1131,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                 Son yenileme: {new Date().toLocaleString('az-AZ')} - Audit izi aktivdir
               </div>
             </div>
+
+              </div>
+            )}
 
             {activeTab === 'env' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
