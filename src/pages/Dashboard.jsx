@@ -133,6 +133,8 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false); 
+  const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
+  const [isAiTyping, setIsAiTyping] = useState(false);
   
   const [activeAlert, setActiveAlert] = useState(null);
 
@@ -227,6 +229,37 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     const interval = setInterval(fetchLiveSensorData, 20000); 
     return () => clearInterval(interval);
   }, [token, onLogout, lang]);
+
+  // Real LLM provayderinin qoşulub-qoşulmadığını yoxlayırıq.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAiStatus = async () => {
+      const activeToken = token || localStorage.getItem('esg_token');
+      if (!activeToken) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/ai/status`, {
+          headers: { 'Authorization': `Bearer ${activeToken}` }
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!cancelled) {
+          setAiMeta({
+            configured: Boolean(data.configured),
+            provider: data.provider || null,
+            model: data.model || null
+          });
+        }
+      } catch (err) {
+        console.warn('AI statusu yoxlanılmadı:', err.message);
+      }
+    };
+
+    loadAiStatus();
+    return () => { cancelled = true; };
+  }, [token]);
 
   
   useEffect(() => {
@@ -395,15 +428,58 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     }
   };
 
-  const sendQuestion = (rawQuestion) => {
+  const sendQuestion = async (rawQuestion) => {
     const question = String(rawQuestion || '').trim();
     if (!question) return;
 
     setChatMessages(prev => [...prev, { sender: 'user', text: question }]);
     setChatInput('');
+    setIsAiTyping(true);
 
-    setTimeout(() => {
-      const answer = buildAiReply({
+    let answer = '';
+    const activeToken = token || localStorage.getItem('esg_token');
+
+    if (aiMeta.configured && activeToken) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/ai/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeToken}`
+          },
+          body: JSON.stringify({
+            message: question,
+            lang,
+            context: {
+              companyName: profileName,
+              activeTab,
+              metrics
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          answer = String(data.answer || '').trim();
+          if (data.provider) {
+            setAiMeta(prev => ({
+              ...prev,
+              configured: true,
+              provider: data.provider || prev.provider,
+              model: data.model || prev.model
+            }));
+          }
+        } else if (response.status === 503) {
+          setAiMeta(prev => ({ ...prev, configured: false }));
+        }
+      } catch (err) {
+        console.warn('AI API xətası, lokal köməkçiyə keçilir:', err.message);
+      }
+    }
+
+    // API cavab verməzsə, geniş lokal bilik bazası işə düşür.
+    if (!answer) {
+      answer = buildAiReply({
         question,
         lang,
         profileName,
@@ -411,8 +487,10 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         reportData: reportData12Months,
         activeTab
       });
-      setChatMessages(prev => [...prev, { sender: 'ai', text: answer }]);
-    }, 450);
+    }
+
+    setChatMessages(prev => [...prev, { sender: 'ai', text: answer }]);
+    setIsAiTyping(false);
   };
 
   const handleSendMessage = (e) => {
@@ -843,8 +921,10 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               <span style={{ fontSize: '1.3rem' }}>🧠</span>
               <div>
                 <strong style={{ fontSize: '0.95rem' }}>BlueGreen AI Core</strong>
-                <div style={{ fontSize: '0.75rem', color: '#00FF87' }}>
-                  {lang === 'en' ? 'Universal ESG Assistant v3.0' : lang === 'ru' ? 'Универсальный ESG-помощник v3.0' : 'Universal ESG Köməkçisi v3.0'}
+                <div style={{ fontSize: '0.75rem', color: aiMeta.configured ? '#00FF87' : '#9fe8ff', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span>{aiMeta.configured ? `● LLM: ${aiMeta.provider}` : '○ Local AI'}</span>
+                  <span style={{ color: '#8a93a6' }}>·</span>
+                  <span>{lang === 'en' ? 'Universal Assistant v3.1' : lang === 'ru' ? 'Универсальный помощник v3.1' : 'Universal Köməkçi v3.1'}</span>
                 </div>
               </div>
             </div>
@@ -857,6 +937,11 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                 {renderRichText(msg.text)}
               </div>
             ))}
+            {isAiTyping && (
+              <div style={{ alignSelf: 'flex-start', background: 'rgba(0,210,255,0.06)', color: '#9fe8ff', padding: '0.8rem 1.1rem', borderRadius: '16px', border: '1px solid rgba(0,210,255,0.15)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                {lang === 'en' ? 'BlueGreen AI is typing…' : lang === 'ru' ? 'BlueGreen AI печатает…' : 'BlueGreen AI yazır…'}
+              </div>
+            )}
           </div>
 
           {chatMessages.length <= 1 && (
