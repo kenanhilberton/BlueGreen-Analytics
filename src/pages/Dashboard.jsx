@@ -145,7 +145,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [isChatOpen, setIsChatOpen] = useState(false); 
   const [profileToast, setProfileToast] = useState(null);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
-  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [offsetCo2, setOffsetCo2] = useState(metrics.co2);
   
   const [activeAlert, setActiveAlert] = useState(null);
 
@@ -378,6 +378,11 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     });
   }, [lang, profileName, metrics]);
 
+  // Karbon kompensasiya kalkulyatoru üçün cari CO₂ ilə sinxronizasiya.
+  useEffect(() => {
+    setOffsetCo2(metrics.co2);
+  }, [metrics.co2]);
+
   // Sənaye sektorunu yadda saxlayırıq.
   useEffect(() => {
     try { localStorage.setItem('bg_industry_sector', industrySector); } catch {}
@@ -419,6 +424,43 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     { title: t.socialScore, value: 88, change: t.perfect, color: "#00FF87", suffix: " / 100", isStarred: true },
     { title: t.corpGov, value: 92, change: t.high, color: "#00D2FF", suffix: "%", isStarred: false }
   ];
+
+  const forecastNext = (values, steps = 6) => {
+    const clean = values.filter((v) => typeof v === 'number' && !isNaN(v));
+    const n = clean.length;
+    if (n < 2) return Array(steps).fill(clean[n - 1] || 0);
+    const xs = clean.map((_, i) => i);
+    const ys = clean;
+    const sumX = xs.reduce((a, b) => a + b, 0);
+    const sumY = ys.reduce((a, b) => a + b, 0);
+    const sumXY = xs.reduce((a, x, i) => a + x * ys[i], 0);
+    const sumX2 = xs.reduce((a, x) => a + x * x, 0);
+    const denom = n * sumX2 - sumX * sumX;
+    const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
+    const intercept = (sumY - slope * sumX) / n;
+    const lastX = n - 1;
+    const out = [];
+    for (let i = 1; i <= steps; i++) {
+      out.push(Math.max(0, slope * (lastX + i) + intercept));
+    }
+    return out;
+  };
+
+  const co2Forecast = forecastNext(historyData.map((d) => d['CO₂ (Ton)']), 6);
+  const forecastChartData = (() => {
+    const base = historyData.map((d, i) => ({
+      ...d,
+      forecast: i === historyData.length - 1 ? d['CO₂ (Ton)'] : null
+    }));
+    const tail = co2Forecast.map((v, i) => ({
+      name: `+${i + 1}`,
+      'CO₂ (Ton)': null,
+      'Enerji (kWh)': null,
+      'Su (m³)': null,
+      forecast: Number(v.toFixed(2))
+    }));
+    return [...base, ...tail];
+  })();
 
   const overviewChartData = reportData12Months.slice(0, 6).map(d => ({
     name: d.month,
@@ -666,9 +708,29 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
                     <h3 style={{ fontSize: '1.05rem', margin: '0 0 1.5rem 0', color: '#b0b7c6', fontWeight: '600' }}>{t.liveSys} - Canlı Sensor İzləmə Axını</h3>
+                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: '200px', padding: '0.9rem 1.1rem', borderRadius: '14px', background: 'rgba(0, 210, 255, 0.08)', border: '1px solid rgba(0, 210, 255, 0.3)' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#9fe8ff', fontWeight: 600, marginBottom: '0.3rem' }}>🔮 AI Proqnoz (növbəti oxuma)</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#00D2FF' }}>
+                          {co2Forecast[0]?.toFixed(1) ?? '—'} <span style={{ fontSize: '0.8rem', color: '#8a93a6', fontWeight: 500 }}>tCO₂e</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: co2Forecast[0] > (historyData[historyData.length - 1]?.['CO₂ (Ton)'] || 0) ? '#ff7676' : '#00FF87' }}>
+                          {co2Forecast[0] > (historyData[historyData.length - 1]?.['CO₂ (Ton)'] || 0) ? '↑ Artım gözlənilir' : '↓ Azalma gözlənilir'}
+                        </div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: '200px', padding: '0.9rem 1.1rem', borderRadius: '14px', background: 'rgba(0, 255, 135, 0.06)', border: '1px solid rgba(0, 255, 135, 0.25)' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#9fe8ff', fontWeight: 600, marginBottom: '0.3rem' }}>📊 6 oxuma ortalaması</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#00FF87' }}>
+                          {(co2Forecast.reduce((a, b) => a + b, 0) / co2Forecast.length).toFixed(1)} <span style={{ fontSize: '0.8rem', color: '#8a93a6', fontWeight: 500 }}>tCO₂e</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#8a93a6' }}>
+                          Maks: {Math.max(...co2Forecast).toFixed(1)} · Min: {Math.min(...co2Forecast).toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
                     <div style={{ width: '100%', height: '280px' }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={historyData}>
+                        <AreaChart data={forecastChartData}>
                           <defs>
                             <linearGradient id="colorLiveCo2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00FF87" stopOpacity={0.2}/><stop offset="95%" stopColor="#00FF87" stopOpacity={0}/></linearGradient>
                             <linearGradient id="colorLiveEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#FFBB00" stopOpacity={0.2}/><stop offset="95%" stopColor="#FFBB00" stopOpacity={0}/></linearGradient>
@@ -679,9 +741,49 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                           <Tooltip contentStyle={{ background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
                           <Legend verticalAlign="top" height={36} />
                           <Area type="monotone" dataKey="CO₂ (Ton)" stroke="#00FF87" strokeWidth={2} fill="url(#colorLiveCo2)" />
+                          <Area type="monotone" dataKey="forecast" name="Proqnoz (CO₂)" stroke="#00D2FF" strokeWidth={2} strokeDasharray="6 4" fill="none" />
                           <Area type="monotone" dataKey="Enerji (kWh)" stroke="#FFBB00" strokeWidth={2} fill="url(#colorLiveEnergy)" />
                         </AreaChart>
                       </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Karbon kompensasiya kalkulyatoru */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>🌳 Karbon Kompensasiya Kalkulyatoru</h3>
+                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div style={{ flex: 1, minWidth: '220px' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Kompensasiya ediləcək CO₂ (tCO₂e)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={offsetCo2}
+                          onChange={(e) => setOffsetCo2(Number(e.target.value) || 0)}
+                          className="profile-input"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#8a93a6' }}>Lazımi ağac sayı (10 il):</span>
+                          <strong style={{ color: '#00FF87' }}>{Math.ceil(offsetCo2 / 0.21).toLocaleString()} 🌳</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#8a93a6' }}>Təxmini xərc ($20/ton):</span>
+                          <strong style={{ color: '#00D2FF' }}>${(offsetCo2 * 20).toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#8a93a6' }}>Orman sahəsi (ha):</span>
+                          <strong style={{ color: '#FFBB00' }}>{(offsetCo2 / 10).toFixed(2)} ha</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      {Array.from({ length: Math.min(Math.ceil(offsetCo2 / 0.21), 40) }).map((_, i) => (
+                        <span key={i} style={{ fontSize: '1.1rem', animation: `profileToastFade 0.4s ease ${i * 0.03}s both` }}>🌳</span>
+                      ))}
+                      {Math.ceil(offsetCo2 / 0.21) > 40 && <span style={{ color: '#8a93a6', fontSize: '0.85rem', alignSelf: 'center' }}>+{Math.ceil(offsetCo2 / 0.21) - 40} daha...</span>}
                     </div>
                   </div>
                 </div>
