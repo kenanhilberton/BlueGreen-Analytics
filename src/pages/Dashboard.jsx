@@ -922,7 +922,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               <div>
                 <strong style={{ fontSize: '0.95rem' }}>BlueGreen AI Core</strong>
                 <div style={{ fontSize: '0.75rem', color: aiMeta.configured ? '#00FF87' : '#9fe8ff', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span>{aiMeta.configured ? `● LLM: ${aiMeta.provider}` : '○ Local AI'}</span>
+                  <span>{aiMeta.configured ? `● LLM: ${aiMeta.provider === 'pollinations' ? 'Free' : aiMeta.provider}` : '○ Local AI'}</span>
                   <span style={{ color: '#8a93a6' }}>·</span>
                   <span>{lang === 'en' ? 'Universal Assistant v3.1' : lang === 'ru' ? 'Универсальный помощник v3.1' : 'Universal Köməkçi v3.1'}</span>
                 </div>
