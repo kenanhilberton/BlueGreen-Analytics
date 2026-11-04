@@ -128,6 +128,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [profileName, setProfileName] = useState(companyName || localStorage.getItem('bg_company_name') || "BlueGreen Müəssisə");
   const [profileEmail, setProfileEmail] = useState(userEmail || localStorage.getItem('bg_user_email') || "admin@bluegreen.az");
   const [newPass, setNewPass] = useState(''); 
+  const [industrySector, setIndustrySector] = useState('Heavy Industry / Sənaye'); 
   const [avatarSrc, setAvatarSrc] = useState(null);
 
   const [chatInput, setChatInput] = useState('');
@@ -281,6 +282,10 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         .esg-table td { padding: 1.2rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: #d0d7e2; }
         .esg-table tr:hover { background: rgba(255, 255, 255, 0.03); }
         .profile-input { padding: 0.8rem 1rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #fff; outline: none; font-size: 0.95rem; border-radius: 10px; width: 100%; box-sizing: border-box; }
+         .profile-select { padding: 0.8rem 2.5rem 0.8rem 1rem; border: 1px solid rgba(0,210,255,0.35); background-color: rgba(10,15,36,0.96); background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300D2FF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1rem; color: #fff; outline: none; font-size: 0.95rem; border-radius: 12px; width: 100%; box-sizing: border-box; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+         .profile-select:hover { border-color: rgba(0,210,255,0.6); background-color: rgba(15,22,52,0.98); }
+         .profile-select:focus { border-color: #00D2FF; box-shadow: 0 0 0 3px rgba(0,210,255,0.18); }
+         .profile-select option { background: #0a0f24; color: #fff; padding: 0.5rem 0.75rem; }
 
         /* TELEFON VƏ PLANŞET RESPONSİVLİYİ */
         @media (max-width: 1024px) {
@@ -858,7 +863,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       <label style={{ fontSize: '0.85rem', color: '#8a93a6' }}>{t.indSector}</label>
-                      <select className="profile-input" style={{ cursor: 'pointer' }}>
+                      <select className="profile-select" value={industrySector} onChange={(e) => setIndustrySector(e.target.value)}>
                         <option>Heavy Industry / Sənaye</option>
                         <option>Green Energy Production</option>
                         <option>Oil & Gas Refinery</option>
@@ -877,7 +882,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                     <h3 style={{ fontSize: '1.1rem', margin: '1rem 0 0 0', color: '#00FF87', fontWeight: '600' }}>{t.sysLoc}</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       <label style={{ fontSize: '0.85rem', color: '#8a93a6' }}>{t.esgLang}</label>
-                      <select className="profile-input" value={lang} onChange={(e) => setLang(e.target.value)} style={{ cursor: 'pointer' }}>
+                      <select className="profile-select" value={lang} onChange={(e) => setLang(e.target.value)}>
                         <option value="az">Azərbaycan dili (AZ)</option>
                         <option value="en">English (EN)</option>
                         <option value="ru">Русский (RU)</option>
