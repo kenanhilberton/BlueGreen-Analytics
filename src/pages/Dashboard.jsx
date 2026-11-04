@@ -8,6 +8,7 @@ import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar
 } from 'recharts';
 import { exportToExcel, exportToPDF } from '../utils/exportFiles.js';
+import { API_BASE_URL } from '../utils/api.js';
 
 
 const globalFont = '"Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
@@ -146,7 +147,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           return;
         }
 
-        const res = await fetch('https://bluegreen-backend.onrender.com/api/sensors/live', {
+        const res = await fetch(`${API_BASE_URL}/api/sensors/live`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -270,7 +271,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const handleProfileSave = async () => {
     try {
       const activeToken = token || localStorage.getItem('esg_token');
-      const response = await fetch('https://bluegreen-backend.onrender.com/api/user/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

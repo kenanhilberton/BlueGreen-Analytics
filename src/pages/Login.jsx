@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Silk from '../components/ui/Silk.jsx';
 import LogoImg from '../assets/logo.png';
 import ClickSpark from '../components/ui/ClickSpark.jsx';
+import { API_BASE_URL } from '../utils/api.js';
 
 const MainLayout = ({ onLoginSuccess }) => {
   const [authMode, setAuthMode] = useState(null);
@@ -19,8 +20,8 @@ const MainLayout = ({ onLoginSuccess }) => {
     setMessage({ text: '', type: '' });
 
     const url = authMode === 'login' 
-      ? 'https://bluegreen-backend.onrender.com/api/auth/login' 
-      : 'https://bluegreen-backend.onrender.com/api/auth/register';
+      ? `${API_BASE_URL}/api/auth/login` 
+      : `${API_BASE_URL}/api/auth/register`;
 
     const bodyData = authMode === 'login'
       ? { email, password, userId }
@@ -33,10 +34,16 @@ const MainLayout = ({ onLoginSuccess }) => {
         body: JSON.stringify(bodyData)
       });
       
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
 
       if (!res.ok) {
-        setMessage({ text: `❌ ${data.message}`, type: 'error' });
+        const errorText = data.message || `Server xətası baş verdi (HTTP ${res.status}).`;
+        setMessage({ text: `❌ ${errorText}`, type: 'error' });
         return;
       }
 
