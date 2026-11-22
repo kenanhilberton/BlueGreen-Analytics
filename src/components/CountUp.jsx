@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export default function CountUp({ to, from = 0, duration = 1.5, suffix = '' }) {
+export default function CountUp({ to, from = 0, duration = 1.5 }) {
   const ref = useRef(null);
 
   useEffect(() => {

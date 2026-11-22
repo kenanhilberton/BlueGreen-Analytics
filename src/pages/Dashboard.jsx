@@ -439,7 +439,11 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
   // Sənaye sektorunu yadda saxlayırıq.
   useEffect(() => {
-    try { localStorage.setItem('bg_industry_sector', industrySector); } catch {}
+    try {
+      localStorage.setItem('bg_industry_sector', industrySector);
+    } catch (err) {
+      console.warn('Sektor yadda saxlanılmadı:', err.message);
+    }
   }, [industrySector]);
 
   // Profil toast-u 3 saniyə sonra avtomatik bağlanır.
@@ -804,8 +808,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                       </ResponsiveContainer>
                     </div>
                   </div>
+                </div>
 
-                  {/* Karbon kompensasiya kalkulyatoru */}
+                {/* Karbon kompensasiya kalkulyatoru */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
                     <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>🌳 Karbon Kompensasiya Kalkulyatoru</h3>
                     <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -918,7 +923,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                         })()}
                       </div>
                     </div>
-                  </div>}
+                  </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>🌍 3D Karbon Qlobusu</h3>
                     <div style={{ fontSize: '0.8rem', color: '#8a93a6', marginBottom: '0.8rem' }}>
@@ -971,7 +976,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                         </div>
                       );
                     })()}
-                  </div>}
+                  </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,75,75,0.2)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#ff7676', fontWeight: 600 }}>🚨 AI Anomaliya Aşkarlanması</h3>
                     {(() => {
@@ -1039,7 +1044,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                       );
                     })}
                   </div>
-                </div>
 
 
             {/* Departament üzrə emissiya */}

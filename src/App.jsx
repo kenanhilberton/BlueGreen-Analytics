@@ -23,7 +23,7 @@ function App() {
   }, []);
 
   
-  const handleLoginSuccess = (email, company, userToken, rememberMe) => {
+  const handleLoginSuccess = (email, company, userToken, _rememberMe) => {
     setUserEmail(email);
     setCompanyName(company || "BlueGreen Müəssisə");
     setToken(userToken);
