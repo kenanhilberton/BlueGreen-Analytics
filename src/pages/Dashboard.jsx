@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import LogoImg from '../assets/logo.png'; 
-import GridDistortion from '../components/ui/GridDistortion.jsx';
+const GridDistortion = lazy(() => import('../components/ui/GridDistortion.jsx'));
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar,
@@ -10,7 +10,7 @@ import {
 import { exportToExcel, exportToPDF } from '../utils/exportFiles.js';
 import { API_BASE_URL } from '../utils/api.js';
 import { buildAiReply, buildWelcomeMessage, getSuggestedQuestions } from '../utils/aiAssistant.js';
-import CarbonGlobe from '../components/CarbonGlobe.jsx';
+const CarbonGlobe = lazy(() => import('../components/CarbonGlobe.jsx'));
 
 
 const SECTOR_PROFILES = {
@@ -133,6 +133,22 @@ const renderRichText = (text) => {
   });
 };
 
+const CHAT_STORAGE_KEY = 'bg_ai_chat';
+
+function loadChatMessages() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
+    if (Array.isArray(saved)) {
+      return saved
+        .filter((m) => m && (m.sender === 'user' || m.sender === 'ai') && typeof m.text === 'string')
+        .slice(-40);
+    }
+  } catch {
+    // Zədələnmiş tarixçə olduqda yeni söhbətə başlayırıq.
+  }
+  return [];
+}
+
 const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [lang, setLang] = useState('az');
   const t = translations[lang];
@@ -148,7 +164,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [avatarSrc, setAvatarSrc] = useState(null);
 
   const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState([]);
+  const [chatMessages, setChatMessages] = useState(loadChatMessages);
+  // Söhbət başladıqdan sonra canlı göstərici yeniləmələri salam mesajını geri gətirməsin.
+  const hasChatStarted = useRef(chatMessages.some((message) => message.sender === 'user'));
   const [isChatOpen, setIsChatOpen] = useState(false); 
   const [profileToast, setProfileToast] = useState(null);
   const [isAiTyping, setIsAiTyping] = useState(false);
@@ -425,15 +443,21 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   };
 
   useEffect(() => {
-    setChatMessages(prev => {
-      // Söhbət hələ başlamayıbsa, salamlaşma mesajını canlı göstəricilərlə
-      // yeniləyirik. İstifadəçi sual verəndən sonra tarixçə qorunur.
-      if (prev.length <= 1 && (!prev[0] || prev[0].sender === 'ai')) {
-        return [{ sender: 'ai', text: buildWelcomeMessage({ lang, profileName, metrics }) }];
-      }
-      return prev;
-    });
+    // Söhbət hələ başlamayıbsa, salamlaşma mesajını canlı göstəricilərlə
+    // yeniləyirik. İstifadəçi sual verəndən və ya söhbəti təmizləyəndən sonra
+    // tarixçə qorunur və yenidən salam mesajı əlavə olunmur.
+    if (hasChatStarted.current) return;
+    setChatMessages([{ sender: 'ai', text: buildWelcomeMessage({ lang, profileName, metrics }) }]);
   }, [lang, profileName, metrics]);
+
+  // Söhbəti saxlayırıq ki, səhifə yenilənsə də tarixçə itməsin.
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages.slice(-40)));
+    } catch (err) {
+      console.warn('AI söhbəti saxlanılmadı:', err.message);
+    }
+  }, [chatMessages]);
 
   // Karbon kompensasiya kalkulyatoru üçün cari CO₂ ilə sinxronizasiya.
   useEffect(() => {
@@ -478,6 +502,28 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     cyberSecurityTraining: 90 + (idx % 2),
     lawViolations: 0
   }));
+
+  const buildPdfTable = () => ({
+    headers: [
+      t.month, t.s1Em, t.s2Em, t.waterI, t.greenE, t.hsePeriod, t.workerSat,
+      t.trainVol, t.staffAx, t.griIdx, t.transparencyDeg, t.kiberTrain, t.breach
+    ],
+    rows: reportData12Months.map((row) => [
+      row.month,
+      row.scope1,
+      row.scope2,
+      row.waterConsumption,
+      `${row.greenEnergyShare}%`,
+      row.hseDays,
+      row.employeeSatisfaction,
+      row.trainingHours,
+      `${row.staffTurnover}%`,
+      `${row.griCompliance}%`,
+      `${row.transparencyDegree}%`,
+      `${row.cyberSecurityTraining}%`,
+      row.lawViolations
+    ])
+  });
 
   const statsOverview = [
     { title: t.scope1, value: metrics.co2, change: "-5.1%", color: "#00FF87", suffix: " tCO₂e", isStarred: true },
@@ -565,12 +611,17 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
     const question = String(rawQuestion || '').trim();
     if (!question) return;
 
+    hasChatStarted.current = true;
     setChatMessages(prev => [...prev, { sender: 'user', text: question }]);
     setChatInput('');
     setIsAiTyping(true);
 
     let answer = '';
     const activeToken = token || localStorage.getItem('esg_token');
+    const history = chatMessages.slice(-6).map((m) => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text
+    }));
 
     if (aiMeta.configured && activeToken) {
       try {
@@ -583,6 +634,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           body: JSON.stringify({
             message: question,
             lang,
+            history,
             context: {
               companyName: profileName,
               activeTab,
@@ -633,7 +685,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
   return (
     <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#050816', fontFamily: globalFont, color: '#fff', display: 'flex', position: 'relative' }}>
-      <GridDistortion imageSrc={darkNeonImage} grid={10} mouse={0.25} strength={0.15} relaxation={0.9} />
+      <Suspense fallback={null}>
+        <GridDistortion imageSrc={darkNeonImage} grid={10} mouse={0.25} strength={0.15} relaxation={0.9} />
+      </Suspense>
       
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%' }}>
         <aside style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
@@ -725,7 +779,14 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                     <button onClick={() => exportToExcel(reportData12Months, profileName)} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'rgba(0, 255, 135, 0.1)', border: '1px solid rgba(0, 255, 135, 0.2)', color: '#00FF87', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
                       Excel 📊
                     </button>
-                    <button onClick={() => exportToPDF(reportData12Months, profileName)} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid rgba(0, 210, 255, 0.2)', color: '#00D2FF', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <button onClick={() => {
+                      const { headers, rows } = buildPdfTable();
+                      return exportToPDF(`${profileName} — ESG Hesabatı`, headers, rows, profileName)
+                        .catch((err) => {
+                          console.error('PDF ixracı başarısız:', err);
+                          alert(lang === 'en' ? 'PDF export failed. Please try again.' : lang === 'ru' ? 'Не удалось экспортировать PDF. Попробуйте снова.' : 'PDF ixracı başarısız oldu. Zəhmət olmasa yenidən cəhd edin.');
+                        });
+                    }} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid rgba(0, 210, 255, 0.2)', color: '#00D2FF', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
                       PDF 📄
                     </button>
                     <button onClick={generateAiReport} disabled={isGeneratingReport} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 210, 255, 0.2))', border: '1px solid rgba(157, 78, 221, 0.4)', color: '#d4a5ff', fontWeight: '600', cursor: isGeneratingReport ? 'wait' : 'pointer', fontSize: '0.9rem', opacity: isGeneratingReport ? 0.6 : 1 }}>
@@ -932,7 +993,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                     <div style={{ fontSize: '0.8rem', color: '#8a93a6', marginBottom: '0.8rem' }}>
                       Canlı emissiya nöqtələri — qlobus fırlanır, nöqtələr pulsasiya edir. (Nöqtə sayı CO₂ səviyyəsinə proporsionaldır.)
                     </div>
-                    <CarbonGlobe co2={metrics.co2} />
+                    <Suspense fallback={null}><CarbonGlobe co2={metrics.co2} /></Suspense>
                   </div>
 
                   {/* Nə baş verər? ssenari analizi */}
@@ -1412,7 +1473,20 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                 </div>
               </div>
             </div>
-            <button onClick={() => setIsChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#8a93a6', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <button
+                onClick={() => {
+                  // Təmizlədikdən sonra canlı göstərici yeniləməsi yenidən salam mesajı yaratmasın.
+                  hasChatStarted.current = true;
+                  setChatMessages([]);
+                  try { localStorage.removeItem(CHAT_STORAGE_KEY); } catch (err) { console.warn(err.message); }
+                }}
+                title={lang === 'en' ? 'Clear chat' : lang === 'ru' ? 'Очистить чат' : 'Söhbəti təmizlə'}
+                aria-label="Clear chat"
+                style={{ background: 'transparent', border: 'none', color: '#8a93a6', fontSize: '1rem', cursor: 'pointer' }}
+              >🗑</button>
+              <button onClick={() => setIsChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#8a93a6', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            </div>
           </div>
           
           <div className="ai-chat-messages" style={{ flex: 1, padding: '1.2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem', lineHeight: '1.4' }}>

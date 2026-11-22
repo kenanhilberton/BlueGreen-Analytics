@@ -1,6 +1,3 @@
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-
 /**
  * Cədvəl məlumatlarını Excel formatında yükləyir (Təhlükəsiz CDN Versiyası)
  * @param {Array} data - İxrac olunacaq obyektlər massivi
@@ -28,8 +25,11 @@ export const exportToExcel = (data, fileName = 'ESG_Hesabat') => {
  * @param {Array} rows - Cədvəlin sətirləri
  * @param {string} fileName - Faylın adı
  */
-export const exportToPDF = (title, headers, rows, fileName = 'ESG_Hesabat') => {
-  const doc = jsPDF({ orientation: 'landscape' }); 
+export const exportToPDF = async (title, headers, rows, fileName = 'ESG_Hesabat') => {
+  // Ağır PDF kitabxanasını yalnız ixrac düyməsi basıldıqda yükləyirik.
+  const { jsPDF } = await import('jspdf');
+  const { autoTable } = await import('jspdf-autotable');
+  const doc = jsPDF({ orientation: 'landscape' });
 
   // Minimalist rəsmi dizayn stilləri
   doc.setFont("Helvetica", "bold");
@@ -44,7 +44,7 @@ export const exportToPDF = (title, headers, rows, fileName = 'ESG_Hesabat') => {
   doc.text(`Sistem: BlueGreen ESG Live Dashboard`, 14, 33);
 
   // Otomatik tablonun qurulması
-  doc.autoTable({
+  autoTable(doc, {
     startY: 40,
     head: [headers],
     body: rows,
