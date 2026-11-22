@@ -313,6 +313,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
          .profile-select option { background: #0a0f24; color: #fff; padding: 0.5rem 0.75rem; }
           @media (max-width: 768px) { .mobile-bottom-nav { display: flex !important; } }
 
+        .ai-chat-messages { scrollbar-width: none; -ms-overflow-style: none; }
+        .ai-chat-messages::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
         /* TELEFON VƏ PLANŞET RESPONSİVLİYİ */
         @media (max-width: 1024px) {
           aside { width: 80px !important; padding: 2rem 0.5rem !important; align-items: center; }
@@ -681,7 +684,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               onClick={() => setIsChatOpen(true)}
               style={{ padding: '0.75rem 1rem', borderRadius: '10px', background: 'rgba(157, 78, 221, 0.15)', border: '1px solid rgba(157, 78, 221, 0.3)', color: '#d4a5ff', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', transition: '0.2s' }}
             >
-              🧠 BlueGreen AI
+              🤖 BlueGreen AI
             </button>
 
             <button 
@@ -1399,7 +1402,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         <div style={{ position: 'fixed', bottom: '20px', right: '20px', width: '420px', height: '550px', background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <span style={{ fontSize: '1.3rem' }}>🧠</span>
+              <span style={{ fontSize: '1.3rem' }}>🤖</span>
               <div>
                 <strong style={{ fontSize: '0.95rem' }}>BlueGreen AI Core</strong>
                 <div style={{ fontSize: '0.75rem', color: aiMeta.configured ? '#00FF87' : '#9fe8ff', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1412,7 +1415,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             <button onClick={() => setIsChatOpen(false)} style={{ background: 'transparent', border: 'none', color: '#8a93a6', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
           </div>
           
-          <div style={{ flex: 1, padding: '1.2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem', lineHeight: '1.4' }}>
+          <div className="ai-chat-messages" style={{ flex: 1, padding: '1.2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem', lineHeight: '1.4' }}>
             {chatMessages.map((msg, i) => (
               <div key={i} style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', background: msg.sender === 'user' ? '#00D2FF' : 'rgba(255,255,255,0.03)', color: msg.sender === 'user' ? '#050816' : '#fff', padding: '0.8rem 1.1rem', borderRadius: '16px', maxWidth: '85%', border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.04)', whiteSpace: 'pre-line' }}>
                 {renderRichText(msg.text)}

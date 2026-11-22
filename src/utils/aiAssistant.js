@@ -211,6 +211,22 @@ const INTENTS = [
     )
   },
   {
+    id: 'who_is',
+    keywords: ['kimdi', 'kimdir', 'kim idi', 'who is', 'who was', "who's", 'кто такой', 'кто такая', 'кто был'],
+    reply: ({ lang, question }) => {
+      const raw = String(question || '');
+      const match = raw.match(/(?:who\s+(?:is|was)|who's|kimdir|kimdi|kim\s+idi|кто\s+(?:такой|такая|был))\s+([^?!.,]+)/i);
+      const name = (match ? match[1] : raw).trim().replace(/^(the|a|an)\s+/i, '');
+      const subject = name || raw;
+      return pick(
+        lang,
+        `**${subject}** haqqında təsdiqlənmiş məlumatım yoxdur. Bu adla bir neçə şəxs ola bilər — alim, iş adamı, idmançı və ya şirkətinizin bir əməkdaşı. Hansı sahə, ölkə və ya şirkət nəzərdə tutulduğunu qısaca yazsanız, daha dəqiq cavab verə bilərəm.`,
+        `I do not have a verified profile for **${subject}**. Several people can share this name — a scientist, a businessperson, an athlete, or someone at your company. Tell me the field, country or company you mean and I can give a more precise answer.`,
+        `У меня нет проверенных сведений о человеке по имени **${subject}**. Это имя может относиться к нескольким людям — учёному, бизнесмену, спортсмену или сотруднику вашей компании. Уточните сферу, страну или компанию, и я отвечу точнее.`
+      );
+    }
+  },
+  {
     id: 'greeting',
     keywords: ['salam', 'salamlar', 'hello', 'hi ', 'hey', 'привет', 'здравствуйте', 'sabahın xeyir', 'axşamın xeyir'],
     reply: ({ lang, metrics }) => {
