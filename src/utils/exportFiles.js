@@ -40,7 +40,7 @@ export const exportToPDF = async (title, headers, rows, fileName = 'ESG_Hesabat'
   doc.setFont("Helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Generasiya tarixi: ${new Date().toLocaleString()}`, 14, 28);
+  doc.text(`Yaradılma tarixi: ${new Date().toLocaleString()}`, 14, 28);
   doc.text(`Sistem: BlueGreen ESG Live Dashboard`, 14, 33);
 
   // Otomatik tablonun qurulması

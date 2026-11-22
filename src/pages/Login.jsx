@@ -193,7 +193,7 @@ const MainLayout = ({ onLoginSuccess }) => {
               {authMode === 'register' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   <label style={{ fontSize: '0.8rem', color: '#b0b7c6', fontWeight: '500' }}>Müəssisənin Rəsmi Adı</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Məs: Baku Steel Company" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(255, 255, 255, 0.03)', color: '#fff', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Məs: Bakı Steel Company" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(255, 255, 255, 0.03)', color: '#fff', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} />
                 </div>
               )}
               
@@ -204,7 +204,7 @@ const MainLayout = ({ onLoginSuccess }) => {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                 <label style={{ fontSize: '0.8rem', color: '#b0b7c6', fontWeight: '500' }}>Korporativ E-poçt</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="admin@muessise.az" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(255, 255, 255, 0.03)', color: '#fff', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="admin@muəssisə.az" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(255, 255, 255, 0.03)', color: '#fff', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} />
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>

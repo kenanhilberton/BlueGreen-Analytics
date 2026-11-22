@@ -783,8 +783,8 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                       const { headers, rows } = buildPdfTable();
                       return exportToPDF(`${profileName} — ESG Hesabatı`, headers, rows, profileName)
                         .catch((err) => {
-                          console.error('PDF ixracı başarısız:', err);
-                          alert(lang === 'en' ? 'PDF export failed. Please try again.' : lang === 'ru' ? 'Не удалось экспортировать PDF. Попробуйте снова.' : 'PDF ixracı başarısız oldu. Zəhmət olmasa yenidən cəhd edin.');
+                          console.error('PDF ixracı baş tutmadı:', err);
+                          alert(lang === 'en' ? 'PDF export failed. Please try again.' : lang === 'ru' ? 'Не удалось экспортировать PDF. Попробуйте снова.' : 'PDF ixracı baş tutmadı. Zəhmət olmasa yenidən cəhd edin.');
                         });
                     }} style={{ padding: '0.7rem 1.2rem', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid rgba(0, 210, 255, 0.2)', color: '#00D2FF', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
                       PDF 📄
@@ -1078,9 +1078,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                     })()}
                   </div>
 
-                  {/* Sürdürübilirlik hədəfləri (OKR) */}
+                  {/* Davamlılıq hədəfləri (OKR) */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>🎯 Sürdürübilirlik Hədəfləri (OKR)</h3>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>🎯 Davamlılıq Hədəfləri (OKR)</h3>
                     {[
                       { label: 'CO₂ emissiyasını 20% azalt', current: metrics.co2, target: 40, unit: 'tCO₂e', lowerBetter: true },
                       { label: 'Yaşıl enerji payını 50%-ə çatdır', current: 18.4, target: 50, unit: '%', lowerBetter: false },
@@ -1112,13 +1112,13 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
             {/* Departament üzrə emissiya */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>Departament Uzre Emissiya</h3>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>Departament üzrə emissiya</h3>
               {[
-                { name: 'Istehsalat xetti A', value: 42, color: '#ff4b4b' },
-                { name: 'Istehsalat xetti B', value: 28, color: '#ffbb00' },
-                { name: 'Enerji sistemleri', value: 15, color: '#00D2FF' },
-                { name: 'Logistika ve neqliyyat', value: 10, color: '#9d4edd' },
-                { name: 'Ofis ve infrastruktur', value: 5, color: '#00FF87' }
+                { name: 'İstehsalat xətti A', value: 42, color: '#ff4b4b' },
+                { name: 'İstehsalat xətti B', value: 28, color: '#ffbb00' },
+                { name: 'Enerji sistemləri', value: 15, color: '#00D2FF' },
+                { name: 'Logistika və nəqliyyat', value: 10, color: '#9d4edd' },
+                { name: 'Ofis və infrastruktur', value: 5, color: '#00FF87' }
               ].map((d, i) => (
                 <div key={i} style={{ marginBottom: '0.7rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
@@ -1134,7 +1134,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
             {/* Risk matrisi */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#ff4b4b', fontWeight: 600 }}>Iqlim Risk Matrisi</h3>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#ff4b4b', fontWeight: 600 }}>İqlim Risk Matrisi</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', maxWidth: '300px', margin: '0 auto' }}>
                 {[1,2,2,3,4,1,2,3,3,4,2,3,3,4,4,2,3,4,4,5,3,4,4,5,5].map((val, i) => {
                   const colors = ['#00FF87', '#FFBB00', '#ff8c00', '#ff4b4b', '#cc0000'];
@@ -1146,29 +1146,29 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                 })}
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '0.8rem', marginTop: '0.8rem', fontSize: '0.7rem', color: '#8a93a6', flexWrap: 'wrap' }}>
-                <span>Asagi</span><span>Orta</span><span>Yuksak</span><span>Kritik</span>
+                <span>Çox aşağı</span><span>Aşağı</span><span>Orta</span><span>Yüksək</span><span>Kritik</span>
               </div>
             </div>
 
-            {/* Techizatci ESG reytinqi */}
+            {/* Təchizatçı ESG reytinqi */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#9d4edd', fontWeight: 600 }}>Techizatci ESG Reytinqi</h3>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#9d4edd', fontWeight: 600 }}>Təchizatçı ESG Reytinqi</h3>
               <div style={{ overflowX: 'auto' }}>
                 <table className="esg-table" style={{ fontSize: '0.85rem' }}>
-                  <thead><tr><th>Techizatci</th><th>ESG Bal</th><th>CO2 (t)</th><th>Status</th></tr></thead>
+                  <thead><tr><th>Təchizatçı</th><th>ESG Bal</th><th>CO₂ (t)</th><th>Vəziyyət</th></tr></thead>
                   <tbody>
                     {[
-                      { name: 'Baku Steel Supply', score: 82, co2: 120, status: 'Yaxsi' },
+                      { name: 'Bakı Steel Supply', score: 82, co2: 120, status: 'Yaxşı' },
                       { name: 'Caspian Logistics', score: 74, co2: 85, status: 'Orta' },
-                      { name: 'GreenTech Materials', score: 91, co2: 45, status: 'Ela' },
-                      { name: 'AzEnergy Corp', score: 68, co2: 200, status: 'Zaif' },
-                      { name: 'EcoPackaging Ltd', score: 88, co2: 30, status: 'Yaxsi' }
+                      { name: 'GreenTech Materials', score: 91, co2: 45, status: 'Əla' },
+                      { name: 'AzEnergy Corp', score: 68, co2: 200, status: 'Zəif' },
+                      { name: 'EcoPackaging Ltd', score: 88, co2: 30, status: 'Yaxşı' }
                     ].map((s, i) => (
                       <tr key={i}>
                         <td>{s.name}</td>
                         <td style={{ color: s.score >= 85 ? '#00FF87' : s.score >= 70 ? '#FFBB00' : '#ff4b4b', fontWeight: 700 }}>{s.score}/100</td>
                         <td>{s.co2} t</td>
-                        <td style={{ color: s.status === 'Ela' ? '#00FF87' : s.status === 'Yaxsi' ? '#00D2FF' : s.status === 'Orta' ? '#FFBB00' : '#ff4b4b' }}>{s.status}</td>
+                        <td style={{ color: s.status === 'Əla' ? '#00FF87' : s.status === 'Yaxşı' ? '#00D2FF' : s.status === 'Orta' ? '#FFBB00' : '#ff4b4b' }}>{s.status}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1176,15 +1176,15 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               </div>
             </div>
 
-            {/* Melumat keyfiyyeti */}
+            {/* Məlumat keyfiyyəti */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>Melumat Keyfiyyeti ve Audit Izi</h3>
+              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>Məlumat Keyfiyyəti və Audit İzi</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.8rem' }}>
                 {[
-                  { label: 'Melumat dolulugu', value: 94, color: '#00FF87' },
-                  { label: 'Sensor ehatasi', value: 87, color: '#00D2FF' },
-                  { label: 'Manual giris', value: 12, color: '#FFBB00' },
-                  { label: 'Audit hazirligi', value: 91, color: '#9d4edd' }
+                  { label: 'Məlumat doluluğu', value: 94, color: '#00FF87' },
+                  { label: 'Sensor əhatəsi', value: 87, color: '#00D2FF' },
+                  { label: 'Əl ilə giriş', value: 12, color: '#FFBB00' },
+                  { label: 'Audit hazırlığı', value: 91, color: '#9d4edd' }
                 ].map((q, i) => (
                   <div key={i} style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ fontSize: '0.75rem', color: '#8a93a6', marginBottom: '0.3rem' }}>{q.label}</div>
@@ -1196,7 +1196,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                 ))}
               </div>
               <div style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: '#8a93a6' }}>
-                Son yenileme: {new Date().toLocaleString('az-AZ')} - Audit izi aktivdir
+                Son yeniləmə: {new Date().toLocaleString('az-AZ')} · Audit izi aktivdir
               </div>
             </div>
 
