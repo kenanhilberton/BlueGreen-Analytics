@@ -169,6 +169,7 @@ describe('Dashboard AI chat', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Dashboard/ }));
 
+    expect(document.querySelector('aside')).toHaveClass('dashboard-menu-open');
     expect(screen.getByText('Ümumi Panel')).toBeInTheDocument();
     expect(screen.getByText('Ekoloji Data')).toBeInTheDocument();
     expect(screen.getByText('Sosial Göstəricilər')).toBeInTheDocument();

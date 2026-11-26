@@ -341,7 +341,11 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           aside { width: 80px !important; padding: 2rem 0.5rem !important; align-items: center; }
           aside .profile-input, aside p, aside strong, aside span:not(:first-child) { display: none !important; }
           aside button { font-size: 0.7rem !important; padding: 0.5rem !important; }
+          aside.dashboard-menu-open { width: 280px !important; padding: 2rem 1.5rem !important; align-items: stretch !important; }
+          aside.dashboard-menu-open span:not(:first-child) { display: inline !important; }
+          aside.dashboard-menu-open button { font-size: 0.95rem !important; padding: 0.85rem 1rem !important; }
           nav { left: 80px !important; }
+          aside.dashboard-menu-open + div nav { left: 0 !important; }
           .neon-alert-box { left: 100px !important; max-width: 300px; }
           div[style*="gridTemplateColumns: repeat(4, 1fr)"],
           div[style*="gridTemplateColumns: repeat(3, 1fr)"],
@@ -692,7 +696,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       </Suspense>
       
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%' }}>
-        <aside style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
+        <aside className={isDashboardOpen ? 'dashboard-menu-open' : ''} style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '3rem' }}>
             <img src={LogoImg} alt="Logo" style={{ width: '32px', height: '32px' }} />
             <div style={{ fontWeight: '800', fontSize: '1.2rem' }}>
