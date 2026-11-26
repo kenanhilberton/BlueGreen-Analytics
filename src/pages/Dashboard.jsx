@@ -30,7 +30,7 @@ const darkNeonImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/200
 
 const translations = {
   az: {
-    overview: "Ümumi Panel", envData: "Ekoloji Data", socialG: "Sosial Göstəricilər", govG: "İdarəetmə", profSet: "Profil Ayarları", dashboard: "Dashboard",
+    overview: "Ümumi Panel", envData: "Ekoloji Data", socialG: "Sosial Göstəricilər", govG: "İdarəetmə", profSet: "Profil Ayarları", dashboard: "Dashboard", sidebarOpen: "Dashboard panelini aç", sidebarClose: "Dashboard panelini bağla",
     liveSys: "● Canlı ESG Sistemi", contactSupport: "📞 Əlaqə & Dəstək", logout: "Çıxış", panelSub: "Sənaye müəssisələri üçün canlı ESG paneli",
     welcome: "Xoş Gəldiniz", scope1: "Scope 1 - Stasionar Yanma", scope2: "Scope 2 - Elektrik İstehlakı",
     socialScore: "Sosial Davamlılıq Skoru", corpGov: "Korporativ İdarəetmə", perfect: "Mükəmməl", high: "Yüksək", optimal: "Optimal",
@@ -52,7 +52,7 @@ const translations = {
     aiAnalysisBtn: "🧠 AI Risk Analizi & ESG Tövsiyəsi Al", aiResponseText: "AI təhlil edir... Göstəricilər qorunur və yaşıl zonadadır."
   },
   en: {
-    overview: "Overview Dashboard", envData: "Environmental Data", socialG: "Social Indicators", govG: "Governance", profSet: "Profile Settings", dashboard: "Dashboard",
+    overview: "Overview Dashboard", envData: "Environmental Data", socialG: "Social Indicators", govG: "Governance", profSet: "Profile Settings", dashboard: "Dashboard", sidebarOpen: "Open dashboard panel", sidebarClose: "Close dashboard panel",
     liveSys: "● Live ESG System", contactSupport: "📞 Contact & Support", logout: "Logout", panelSub: "Live ESG dashboard for industrial enterprises",
     welcome: "Welcome", scope1: "Scope 1 - Stationary Combustion", scope2: "Scope 2 - Electricity Consumption",
     socialScore: "Social Sustainability Score", corpGov: "Corporate Governance", perfect: "Excellent", high: "High", optimal: "Optimal",
@@ -74,7 +74,7 @@ const translations = {
     aiAnalysisBtn: "🧠 Get AI Risk Analysis & ESG Recommendations", aiResponseText: "AI analyzing... Metrics are secure and in the green zone."
   },
   ru: {
-    overview: "Общая Панель", envData: "Экологические Данные", socialG: "Социальные Показатели", govG: "Управление", profSet: "Настройки Профиля", dashboard: "Панель",
+    overview: "Общая Панель", envData: "Экологические Данные", socialG: "Социальные Показатели", govG: "Управление", profSet: "Настройки Профиля", dashboard: "Панель", sidebarOpen: "Открыть панель Dashboard", sidebarClose: "Закрыть панель Dashboard",
     liveSys: "● Живая Система ESG", contactSupport: "📞 Связь и Поддержка", logout: "Выход", panelSub: "Живая панель ESG для промышленных предприятий",
     welcome: "Добро пожаловать", scope1: "Scope 1 - Стационарное Сгорание", scope2: "Scope 2 - Потребление Электроэнергии",
     socialScore: "Индекс Социальной Устойчивости", corpGov: "Corporate Governance", perfect: "Отлично", high: "Высокий", optimal: "Оптимальный",
@@ -154,8 +154,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const t = translations[lang];
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  const dashboardActive = ['overview', 'env', 'social'].includes(activeTab);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 768);
   const [profileName, setProfileName] = useState(companyName || localStorage.getItem('bg_company_name') || "BlueGreen Müəssisə");
   const [profileEmail, setProfileEmail] = useState(userEmail || localStorage.getItem('bg_user_email') || "admin@bluegreen.az");
   const [newPass, setNewPass] = useState(''); 
@@ -338,15 +337,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
 
         /* TELEFON VƏ PLANŞET RESPONSİVLİYİ */
         @media (max-width: 1024px) {
-          aside { width: 80px !important; padding: 2rem 0.5rem !important; align-items: center; }
-          aside .profile-input, aside p, aside strong, aside span:not(:first-child) { display: none !important; }
-          aside button { font-size: 0.7rem !important; padding: 0.5rem !important; }
-          aside.dashboard-menu-open { width: 280px !important; padding: 2rem 1.5rem !important; align-items: stretch !important; }
-          aside.dashboard-menu-open span:not(:first-child) { display: inline !important; }
-          aside.dashboard-menu-open button { font-size: 0.95rem !important; padding: 0.85rem 1rem !important; }
-          nav { left: 80px !important; }
-          aside.dashboard-menu-open + div nav { left: 0 !important; }
-          .neon-alert-box { left: 100px !important; max-width: 300px; }
+          .neon-alert-box { left: 20px !important; max-width: 300px; }
           div[style*="gridTemplateColumns: repeat(4, 1fr)"],
           div[style*="gridTemplateColumns: repeat(3, 1fr)"],
           div[style*="gridTemplateColumns: 1fr 1fr"] {
@@ -355,7 +346,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         }
 
         @media (max-width: 768px) {
-          aside { display: none !important; }
           nav { padding: 0 1rem !important; left: 0 !important; width: 100% !important; }
           main { padding: 1.5rem !important; margin-left: 0 !important; }
           .neon-alert-box { left: 20px !important; right: 20px !important; bottom: 20px !important; max-width: 100% !important; }
@@ -696,11 +686,12 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       </Suspense>
       
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%' }}>
-        <aside className={isDashboardOpen ? 'dashboard-menu-open' : ''} style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
+        {isSidebarOpen && (
+        <aside style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
           <button
             type="button"
             aria-label="BlueGreen - Ümumi Panel"
-            onClick={() => { setActiveTab('overview'); setIsDashboardOpen(false); }}
+            onClick={() => setActiveTab('overview')}
             style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '3rem', padding: 0, border: 'none', background: 'transparent', color: 'inherit', fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left' }}
           >
             <img src={LogoImg} alt="Logo" style={{ width: '32px', height: '32px' }} />
@@ -710,49 +701,30 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           </button>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-            <button
-              type="button"
-              onClick={() => setIsDashboardOpen((open) => !open)}
-              aria-expanded={isDashboardOpen}
-              style={{
-                width: '100%', padding: '0.85rem 1rem', borderRadius: '12px', cursor: 'pointer', transition: '0.2s',
-                background: dashboardActive ? 'rgba(0, 210, 255, 0.12)' : 'transparent',
-                border: 'none',
-                borderLeft: dashboardActive ? '4px solid #00D2FF' : '4px solid transparent',
-                color: dashboardActive ? '#fff' : '#b0b7c6', fontWeight: '600',
-                display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'inherit', textAlign: 'left'
-              }}
-            >
-              <span>📊</span>
-              <span style={{ flex: 1 }}>{t.dashboard}</span>
-              <span style={{ fontSize: '0.8rem', transform: isDashboardOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>›</span>
-            </button>
+            {[
+              { id: 'overview', label: t.overview, icon: '📊' },
+              { id: 'env', label: t.envData, icon: '🌱' },
+              { id: 'social', label: t.socialG, icon: '🤝' }
+            ].map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                style={{
+                  width: '100%', padding: '0.85rem 1rem', borderRadius: '12px', cursor: 'pointer', transition: '0.2s',
+                  background: activeTab === item.id ? 'rgba(0, 210, 255, 0.12)' : 'transparent',
+                  border: 'none',
+                  borderLeft: activeTab === item.id ? '4px solid #00D2FF' : '4px solid transparent',
+                  color: activeTab === item.id ? '#fff' : '#b0b7c6', fontWeight: activeTab === item.id ? '600' : '500',
+                  display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'inherit', textAlign: 'left'
+                }}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
 
-            {isDashboardOpen && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.9rem', paddingLeft: '0.7rem', borderLeft: '1px solid rgba(0, 210, 255, 0.2)' }}>
-                {[
-                  { id: 'overview', label: t.overview, icon: '📊' },
-                  { id: 'env', label: t.envData, icon: '🌱' },
-                  { id: 'social', label: t.socialG, icon: '🤝' }
-                ].map((item) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    style={{
-                      width: '100%', padding: '0.65rem 0.8rem', borderRadius: '10px', cursor: 'pointer', transition: '0.2s',
-                      background: activeTab === item.id ? 'rgba(0, 210, 255, 0.16)' : 'transparent',
-                      border: 'none',
-                      color: activeTab === item.id ? '#fff' : '#b0b7c6', fontWeight: activeTab === item.id ? '600' : '500',
-                      display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.9rem', fontFamily: 'inherit', textAlign: 'left'
-                    }}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '0.6rem 0' }} />
 
             {[
               { id: 'gov', label: t.govG, icon: '⚖️' },
@@ -801,10 +773,21 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             </button>
           </div>
         </aside>
+        )}
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <nav style={{ height: '70px', padding: '0 2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 10 }}>
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', minWidth: 0 }}>
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen((open) => !open)}
+                aria-label={isSidebarOpen ? t.sidebarClose : t.sidebarOpen}
+                aria-expanded={isSidebarOpen}
+                title={isSidebarOpen ? t.sidebarClose : t.sidebarOpen}
+                style={{ width: '38px', height: '38px', borderRadius: '10px', border: '1px solid rgba(0, 210, 255, 0.25)', background: 'rgba(0, 210, 255, 0.08)', color: '#00D2FF', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              >
+                {isSidebarOpen ? '✕' : '☰'}
+              </button>
               <span style={{ fontSize: '0.85rem', color: '#8a93a6', fontWeight: '500' }}>{t.panelSub}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>

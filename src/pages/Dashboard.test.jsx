@@ -162,25 +162,29 @@ describe('Dashboard AI chat', () => {
     expect(screen.queryByText('Who is Carl Charles?')).not.toBeInTheDocument();
   });
 
-  it('opens the Dashboard menu with three panels and switches the active view', async () => {
+  it('collapses and expands the sidebar with three panels, then returns home from the logo', async () => {
     renderDashboard();
 
-    expect(screen.queryByText('Ümumi Panel')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /Dashboard/ }));
-
-    expect(document.querySelector('aside')).toHaveClass('dashboard-menu-open');
+    expect(document.querySelector('aside')).toBeInTheDocument();
     expect(screen.getByText('Ümumi Panel')).toBeInTheDocument();
     expect(screen.getByText('Ekoloji Data')).toBeInTheDocument();
     expect(screen.getByText('Sosial Göstəricilər')).toBeInTheDocument();
     expect(screen.getAllByText('İdarəetmə').length).toBeGreaterThan(0);
     expect(screen.getByText('Profil Ayarları')).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Dashboard panelini bağla' }));
+    expect(document.querySelector('aside')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ümumi Panel')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dashboard panelini aç' }));
+    expect(document.querySelector('aside')).toBeInTheDocument();
+    expect(screen.getByText('Ümumi Panel')).toBeInTheDocument();
+
     fireEvent.click(screen.getByText('Ekoloji Data'));
     expect(await screen.findByText('📋 12 Aylıq Detallı Ekoloji Resurs Hesabatı')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'BlueGreen - Ümumi Panel' }));
     expect(await screen.findByText(/Xoş Gəldiniz/)).toBeInTheDocument();
-    expect(document.querySelector('aside')).not.toHaveClass('dashboard-menu-open');
+    expect(document.querySelector('aside')).toBeInTheDocument();
   });
 });
