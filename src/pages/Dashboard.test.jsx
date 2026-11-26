@@ -161,4 +161,20 @@ describe('Dashboard AI chat', () => {
     });
     expect(screen.queryByText('Who is Carl Charles?')).not.toBeInTheDocument();
   });
+
+  it('opens the Dashboard menu with three panels and switches the active view', async () => {
+    renderDashboard();
+
+    expect(screen.queryByText('Ümumi Panel')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Dashboard/ }));
+
+    expect(screen.getByText('Ümumi Panel')).toBeInTheDocument();
+    expect(screen.getByText('Ekoloji Data')).toBeInTheDocument();
+    expect(screen.getByText('Sosial Göstəricilər')).toBeInTheDocument();
+    expect(screen.getAllByText('İdarəetmə').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByText('Ekoloji Data'));
+    expect(await screen.findByText('📋 12 Aylıq Detallı Ekoloji Resurs Hesabatı')).toBeInTheDocument();
+  });
 });

@@ -30,7 +30,7 @@ const darkNeonImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/200
 
 const translations = {
   az: {
-    overview: "Ümumi Panel", envData: "Ekoloji Data", socialG: "Sosial Göstəricilər", govG: "İdarəetmə", profSet: "Profil Ayarları",
+    overview: "Ümumi Panel", envData: "Ekoloji Data", socialG: "Sosial Göstəricilər", govG: "İdarəetmə", profSet: "Profil Ayarları", dashboard: "Dashboard",
     liveSys: "● Canlı ESG Sistemi", contactSupport: "📞 Əlaqə & Dəstək", logout: "Çıxış", panelSub: "Sənaye müəssisələri üçün canlı ESG paneli",
     welcome: "Xoş Gəldiniz", scope1: "Scope 1 - Stasionar Yanma", scope2: "Scope 2 - Elektrik İstehlakı",
     socialScore: "Sosial Davamlılıq Skoru", corpGov: "Korporativ İdarəetmə", perfect: "Mükəmməl", high: "Yüksək", optimal: "Optimal",
@@ -52,7 +52,7 @@ const translations = {
     aiAnalysisBtn: "🧠 AI Risk Analizi & ESG Tövsiyəsi Al", aiResponseText: "AI təhlil edir... Göstəricilər qorunur və yaşıl zonadadır."
   },
   en: {
-    overview: "Overview Dashboard", envData: "Environmental Data", socialG: "Social Indicators", govG: "Governance", profSet: "Profile Settings",
+    overview: "Overview Dashboard", envData: "Environmental Data", socialG: "Social Indicators", govG: "Governance", profSet: "Profile Settings", dashboard: "Dashboard",
     liveSys: "● Live ESG System", contactSupport: "📞 Contact & Support", logout: "Logout", panelSub: "Live ESG dashboard for industrial enterprises",
     welcome: "Welcome", scope1: "Scope 1 - Stationary Combustion", scope2: "Scope 2 - Electricity Consumption",
     socialScore: "Social Sustainability Score", corpGov: "Corporate Governance", perfect: "Excellent", high: "High", optimal: "Optimal",
@@ -74,7 +74,7 @@ const translations = {
     aiAnalysisBtn: "🧠 Get AI Risk Analysis & ESG Recommendations", aiResponseText: "AI analyzing... Metrics are secure and in the green zone."
   },
   ru: {
-    overview: "Общая Панель", envData: "Экологические Данные", socialG: "Социальные Показатели", govG: "Управление", profSet: "Настройки Профиля",
+    overview: "Общая Панель", envData: "Экологические Данные", socialG: "Социальные Показатели", govG: "Управление", profSet: "Настройки Профиля", dashboard: "Панель",
     liveSys: "● Живая Система ESG", contactSupport: "📞 Связь и Поддержка", logout: "Выход", panelSub: "Живая панель ESG для промышленных предприятий",
     welcome: "Добро пожаловать", scope1: "Scope 1 - Стационарное Сгорание", scope2: "Scope 2 - Потребление Электроэнергии",
     socialScore: "Индекс Социальной Устойчивости", corpGov: "Corporate Governance", perfect: "Отлично", high: "Высокий", optimal: "Оптимальный",
@@ -154,6 +154,8 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const t = translations[lang];
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const dashboardActive = ['overview', 'env', 'social'].includes(activeTab);
   const [profileName, setProfileName] = useState(companyName || localStorage.getItem('bg_company_name') || "BlueGreen Müəssisə");
   const [profileEmail, setProfileEmail] = useState(userEmail || localStorage.getItem('bg_user_email') || "admin@bluegreen.az");
   const [newPass, setNewPass] = useState(''); 
@@ -699,10 +701,51 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+            <button
+              type="button"
+              onClick={() => setIsDashboardOpen((open) => !open)}
+              aria-expanded={isDashboardOpen}
+              style={{
+                width: '100%', padding: '0.85rem 1rem', borderRadius: '12px', cursor: 'pointer', transition: '0.2s',
+                background: dashboardActive ? 'rgba(0, 210, 255, 0.12)' : 'transparent',
+                border: 'none',
+                borderLeft: dashboardActive ? '4px solid #00D2FF' : '4px solid transparent',
+                color: dashboardActive ? '#fff' : '#b0b7c6', fontWeight: '600',
+                display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'inherit', textAlign: 'left'
+              }}
+            >
+              <span>📊</span>
+              <span style={{ flex: 1 }}>{t.dashboard}</span>
+              <span style={{ fontSize: '0.8rem', transform: isDashboardOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>›</span>
+            </button>
+
+            {isDashboardOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.9rem', paddingLeft: '0.7rem', borderLeft: '1px solid rgba(0, 210, 255, 0.2)' }}>
+                {[
+                  { id: 'overview', label: t.overview, icon: '📊' },
+                  { id: 'env', label: t.envData, icon: '🌱' },
+                  { id: 'social', label: t.socialG, icon: '🤝' }
+                ].map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    style={{
+                      width: '100%', padding: '0.65rem 0.8rem', borderRadius: '10px', cursor: 'pointer', transition: '0.2s',
+                      background: activeTab === item.id ? 'rgba(0, 210, 255, 0.16)' : 'transparent',
+                      border: 'none',
+                      color: activeTab === item.id ? '#fff' : '#b0b7c6', fontWeight: activeTab === item.id ? '600' : '500',
+                      display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.9rem', fontFamily: 'inherit', textAlign: 'left'
+                    }}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {[
-              { id: 'overview', label: t.overview, icon: '📊' },
-              { id: 'env', label: t.envData, icon: '🌱' },
-              { id: 'social', label: t.socialG, icon: '🤝' },
               { id: 'gov', label: t.govG, icon: '⚖️' },
               { id: 'profile', label: t.profSet, icon: '👤' }
             ].map((item) => (
