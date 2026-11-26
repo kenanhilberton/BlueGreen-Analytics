@@ -174,8 +174,13 @@ describe('Dashboard AI chat', () => {
     expect(screen.getByText('Ekoloji Data')).toBeInTheDocument();
     expect(screen.getByText('Sosial Göstəricilər')).toBeInTheDocument();
     expect(screen.getAllByText('İdarəetmə').length).toBeGreaterThan(0);
+    expect(screen.getByText('Profil Ayarları')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Ekoloji Data'));
     expect(await screen.findByText('📋 12 Aylıq Detallı Ekoloji Resurs Hesabatı')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'BlueGreen - Ümumi Panel' }));
+    expect(await screen.findByText(/Xoş Gəldiniz/)).toBeInTheDocument();
+    expect(document.querySelector('aside')).not.toHaveClass('dashboard-menu-open');
   });
 });

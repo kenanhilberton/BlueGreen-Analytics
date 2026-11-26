@@ -697,12 +697,17 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%' }}>
         <aside className={isDashboardOpen ? 'dashboard-menu-open' : ''} style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '3rem' }}>
+          <button
+            type="button"
+            aria-label="BlueGreen - Ümumi Panel"
+            onClick={() => { setActiveTab('overview'); setIsDashboardOpen(false); }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '3rem', padding: 0, border: 'none', background: 'transparent', color: 'inherit', fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left' }}
+          >
             <img src={LogoImg} alt="Logo" style={{ width: '32px', height: '32px' }} />
             <div style={{ fontWeight: '800', fontSize: '1.2rem' }}>
               <span style={{ color: '#00D2FF' }}>Blue</span><span style={{ color: '#00FF87' }}>Green</span>
             </div>
-          </div>
+          </button>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
             <button
