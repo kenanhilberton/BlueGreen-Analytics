@@ -10,7 +10,9 @@ import {
 import { exportToExcel, exportToPDF } from '../utils/exportFiles.js';
 import { API_BASE_URL } from '../utils/api.js';
 import { buildAiReply, buildWelcomeMessage, getSuggestedQuestions } from '../utils/aiAssistant.js';
-const CarbonGlobe = lazy(() => import('../components/CarbonGlobe.jsx'));
+import FacilityMap from '../components/FacilityMap.jsx';
+import ClimateScenario from '../components/ClimateScenario.jsx';
+import CarbonRoadmap from '../components/CarbonRoadmap.jsx';
 
 
 const SECTOR_PROFILES = {
@@ -174,10 +176,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   // Yeni xüsusiyyətlər üçün state-lər
   const [carbonBudget, setCarbonBudget] = useState(100);
-  const [scenarioSolar, setScenarioSolar] = useState(30);
-  const [scenarioEfficiency, setScenarioEfficiency] = useState(15);
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
-  const [offsetCo2, setOffsetCo2] = useState(44);
   
   const [activeAlert, setActiveAlert] = useState(null);
 
@@ -454,11 +453,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       console.warn('AI söhbəti saxlanılmadı:', err.message);
     }
   }, [chatMessages]);
-
-  // Karbon kompensasiya kalkulyatoru üçün cari CO₂ ilə sinxronizasiya.
-  useEffect(() => {
-    setOffsetCo2(metrics.co2);
-  }, [metrics.co2]);
 
   // Sənaye sektorunu yadda saxlayırıq.
   useEffect(() => {
@@ -909,44 +903,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                   </div>
                 </div>
 
-                {/* Karbon kompensasiya kalkulyatoru */}
-                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
-                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00FF87', fontWeight: 600 }}>🌳 Karbon Kompensasiya Kalkulyatoru</h3>
-                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                      <div style={{ flex: 1, minWidth: '220px' }}>
-                        <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Kompensasiya ediləcək CO₂ (tCO₂e)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.1"
-                          value={offsetCo2}
-                          onChange={(e) => setOffsetCo2(Number(e.target.value) || 0)}
-                          className="profile-input"
-                          style={{ width: '100%' }}
-                        />
-                      </div>
-                      <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                          <span style={{ color: '#8a93a6' }}>Lazımi ağac sayı (10 il):</span>
-                          <strong style={{ color: '#00FF87' }}>{Math.ceil(offsetCo2 / 0.21).toLocaleString()} 🌳</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                          <span style={{ color: '#8a93a6' }}>Təxmini xərc ($20/ton):</span>
-                          <strong style={{ color: '#00D2FF' }}>${(offsetCo2 * 20).toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                          <span style={{ color: '#8a93a6' }}>Orman sahəsi (ha):</span>
-                          <strong style={{ color: '#FFBB00' }}>{(offsetCo2 / 10).toFixed(2)} ha</strong>
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      {Array.from({ length: Math.min(Math.ceil(offsetCo2 / 0.21), 40) }).map((_, i) => (
-                        <span key={i} style={{ fontSize: '1.1rem', animation: `profileToastFade 0.4s ease ${i * 0.03}s both` }}>🌳</span>
-                      ))}
-                      {Math.ceil(offsetCo2 / 0.21) > 40 && <span style={{ color: '#8a93a6', fontSize: '0.85rem', alignSelf: 'center' }}>+{Math.ceil(offsetCo2 / 0.21) - 40} daha...</span>}
-                    </div>
-                  </div>
+                <CarbonRoadmap co2={metrics.co2} />
 
                   {/* Benchmark müqayisəsi */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px' }}>
@@ -1023,59 +980,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                       </div>
                     </div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#00D2FF', fontWeight: 600 }}>🌍 3D Karbon Qlobusu</h3>
-                    <div style={{ fontSize: '0.8rem', color: '#8a93a6', marginBottom: '0.8rem' }}>
-                      Canlı emissiya nöqtələri — qlobus fırlanır, nöqtələr pulsasiya edir. (Nöqtə sayı CO₂ səviyyəsinə proporsionaldır.)
-                    </div>
-                    <Suspense fallback={null}><CarbonGlobe co2={metrics.co2} /></Suspense>
-                  </div>
+                  <FacilityMap co2={metrics.co2} />
 
-                  {/* Nə baş verər? ssenari analizi */}
-                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(157,78,221,0.2)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#9d4edd', fontWeight: 600 }}>🔮 "Nə baş verər?" Ssenari Analizi</h3>
-                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                      <div style={{ flex: 1, minWidth: '200px' }}>
-                        <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Günəş paneli payı (%)</label>
-                        <input type="range" min="0" max="100" value={scenarioSolar} onChange={(e) => setScenarioSolar(Number(e.target.value))} style={{ width: '100%', accentColor: '#FFBB00' }} />
-                        <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#FFBB00', fontWeight: 600 }}>{scenarioSolar}%</div>
-                      </div>
-                      <div style={{ flex: 1, minWidth: '200px' }}>
-                        <label style={{ fontSize: '0.8rem', color: '#8a93a6', display: 'block', marginBottom: '0.4rem' }}>Enerji səmərəliliyi artımı (%)</label>
-                        <input type="range" min="0" max="50" value={scenarioEfficiency} onChange={(e) => setScenarioEfficiency(Number(e.target.value))} style={{ width: '100%', accentColor: '#00D2FF' }} />
-                        <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#00D2FF', fontWeight: 600 }}>{scenarioEfficiency}%</div>
-                      </div>
-                    </div>
-                    {(() => {
-                      const solarEffect = (scenarioSolar / 100) * 0.35;
-                      const effEffect = (scenarioEfficiency / 100) * 0.25;
-                      const totalReduction = (solarEffect + effEffect) * 100;
-                      const newCo2 = Math.round(metrics.co2 * (1 - solarEffect - effEffect));
-                      const newEnergy = Math.round(metrics.energy * (1 - effEffect));
-                      const savedCo2 = metrics.co2 - newCo2;
-                      const savedCost = (savedCo2 * 20).toFixed(0);
-                      return (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.8rem' }}>
-                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(0,255,135,0.06)', border: '1px solid rgba(0,255,135,0.2)', textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>CO₂ azalması</div>
-                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00FF87' }}>-{totalReduction.toFixed(0)}%</div>
-                          </div>
-                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(0,210,255,0.06)', border: '1px solid rgba(0,210,255,0.2)', textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>Yeni CO₂</div>
-                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00D2FF' }}>{newCo2} t</div>
-                          </div>
-                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,187,0,0.06)', border: '1px solid rgba(255,187,0,0.2)', textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>Qənaət</div>
-                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFBB00' }}>${savedCost}</div>
-                          </div>
-                          <div style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(157,78,221,0.06)', border: '1px solid rgba(157,78,221,0.2)', textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.7rem', color: '#8a93a6' }}>Yeni Enerji</div>
-                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#9d4edd' }}>{newEnergy} kWh</div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
+                  <ClimateScenario co2={metrics.co2} water={metrics.water} />
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,75,75,0.2)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#ff7676', fontWeight: 600 }}>🚨 AI Anomaliya Aşkarlanması</h3>
                     {(() => {
@@ -1165,24 +1072,6 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Risk matrisi */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '24px', marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', color: '#ff4b4b', fontWeight: 600 }}>İqlim Risk Matrisi</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', maxWidth: '300px', margin: '0 auto' }}>
-                {[1,2,2,3,4,1,2,3,3,4,2,3,3,4,4,2,3,4,4,5,3,4,4,5,5].map((val, i) => {
-                  const colors = ['#00FF87', '#FFBB00', '#ff8c00', '#ff4b4b', '#cc0000'];
-                  return (
-                    <div key={i} style={{ aspectRatio: '1', borderRadius: '6px', background: colors[val-1], opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#fff' }}>
-                      {val}
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.8rem', marginTop: '0.8rem', fontSize: '0.7rem', color: '#8a93a6', flexWrap: 'wrap' }}>
-                <span>Çox aşağı</span><span>Aşağı</span><span>Orta</span><span>Yüksək</span><span>Kritik</span>
-              </div>
             </div>
 
             {/* Təchizatçı ESG reytinqi */}

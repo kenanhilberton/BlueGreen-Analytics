@@ -187,4 +187,26 @@ describe('Dashboard AI chat', () => {
     expect(await screen.findByText(/Xoş Gəldiniz/)).toBeInTheDocument();
     expect(document.querySelector('aside')).toBeInTheDocument();
   });
+
+  it('replaces the globe, risk matrix and offset calculator with interactive tools', () => {
+    renderDashboard();
+
+    expect(screen.getByText('Müəssisə Xəritəsi')).toBeInTheDocument();
+    expect(screen.getByText('İqlim Ssenarisi Simulyatoru')).toBeInTheDocument();
+    expect(screen.getByText('Karbon Azaltma Yol Xəritəsi')).toBeInTheDocument();
+    expect(screen.queryByText('3D Karbon Qlobusu')).not.toBeInTheDocument();
+    expect(screen.queryByText('İqlim Risk Matrisi')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Karbon Kompensasiya Kalkulyatoru/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sumqayıt' }));
+    expect(screen.getAllByText('Kritik').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByText('4°C'));
+    fireEvent.click(screen.getByText('2050'));
+    expect(screen.getAllByText('Yüksək risk').length).toBeGreaterThan(0);
+
+    const solar = screen.getByRole('slider', { name: 'Günəş energiyası' });
+    fireEvent.change(solar, { target: { value: '100' } });
+    expect(screen.getByText('Hədəfə uyğun')).toBeInTheDocument();
+  });
 });
