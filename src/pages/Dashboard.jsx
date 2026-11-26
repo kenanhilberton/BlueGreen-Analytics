@@ -156,7 +156,9 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const t = translations[lang];
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 768);
+  const mobileViewportRef = useRef(isMobile);
   const [profileName, setProfileName] = useState(companyName || localStorage.getItem('bg_company_name') || "BlueGreen Müəssisə");
   const [profileEmail, setProfileEmail] = useState(userEmail || localStorage.getItem('bg_user_email') || "admin@bluegreen.az");
   const [newPass, setNewPass] = useState(''); 
@@ -179,6 +181,20 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   const [aiMeta, setAiMeta] = useState({ configured: false, provider: null, model: null });
   
   const [activeAlert, setActiveAlert] = useState(null);
+
+  // Ekran ölçüsü dəyişəndə mobil panel avtomatik bağlanır, masaüstündə isə açılır.
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      if (mobileViewportRef.current === mobile) return;
+      mobileViewportRef.current = mobile;
+      setIsMobile(mobile);
+      setIsSidebarOpen(!mobile);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const [metrics, setMetrics] = useState({
     co2: 44,
@@ -329,30 +345,129 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
          .profile-select:hover { border-color: rgba(0,210,255,0.6); background-color: rgba(15,22,52,0.98); }
          .profile-select:focus { border-color: #00D2FF; box-shadow: 0 0 0 3px rgba(0,210,255,0.18); }
          .profile-select option { background: #0a0f24; color: #fff; padding: 0.5rem 0.75rem; }
-          @media (max-width: 768px) { .mobile-bottom-nav { display: flex !important; } }
-
         .ai-chat-messages { scrollbar-width: none; -ms-overflow-style: none; }
         .ai-chat-messages::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
-        /* TELEFON VƏ PLANŞET RESPONSİVLİYİ */
+        .dashboard-shell { width: 100%; overflow-x: clip; }
+        .dashboard-sidebar { box-sizing: border-box; }
+        .dashboard-main { box-sizing: border-box; }
+        .ai-chat-panel, .profile-toast-card { box-sizing: border-box; }
+        .mobile-sidebar-backdrop, .mobile-ai-fab { display: none; }
+        .scrollable-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; width: 100%; }
+
+        /* PLANŞET */
         @media (max-width: 1024px) {
           .neon-alert-box { left: 20px !important; max-width: 300px; }
-          div[style*="gridTemplateColumns: repeat(4, 1fr)"],
-          div[style*="gridTemplateColumns: repeat(3, 1fr)"],
-          div[style*="gridTemplateColumns: 1fr 1fr"] {
-            grid-template-columns: repeat(2, 1fr) !important;
+          div[style*="grid-template-columns: repeat(4, 1fr)"],
+          div[style*="grid-template-columns: repeat(3, 1fr)"],
+          div[style*="grid-template-columns: 1fr 1fr"] {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
         }
 
+        /* TELEFON */
         @media (max-width: 768px) {
-          nav { padding: 0 1rem !important; left: 0 !important; width: 100% !important; }
-          main { padding: 1.5rem !important; margin-left: 0 !important; }
-          .neon-alert-box { left: 20px !important; right: 20px !important; bottom: 20px !important; max-width: 100% !important; }
-          div[style*="gridTemplateColumns"] { grid-template-columns: 1fr !important; }
-          h1 { font-size: 1.6rem !important; }
-          .esg-table th, .esg-table td { padding: 0.8rem 0.5rem !important; font-size: 0.8rem !important; }
-          div[style*="width: '420px'"] { width: 100% !important; }
-          .scrollable-table-container { overflow-x: auto; width: 100%; }
+          html, body, #root { width: 100%; overflow-x: clip; }
+          .dashboard-shell { width: 100%; overflow-x: clip; }
+
+          .dashboard-nav {
+            height: 62px !important;
+            padding: 0 0.85rem !important;
+            gap: 0.5rem !important;
+          }
+          .dashboard-nav .nav-subtitle { display: none; }
+          .dashboard-nav .nav-lang button { padding: 0.35rem 0.55rem !important; font-size: 0.72rem !important; }
+
+          .dashboard-main {
+            padding: 1.1rem 0.9rem calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+          }
+
+          .dashboard-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: min(86vw, 300px) !important;
+            height: 100dvh !important;
+            padding: 5.75rem 1.1rem 1.25rem !important;
+            z-index: 10001 !important;
+            overflow-y: auto;
+            box-shadow: 12px 0 40px rgba(0, 0, 0, 0.55);
+          }
+          .mobile-sidebar-backdrop {
+            display: block !important;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(5, 8, 22, 0.68);
+            backdrop-filter: blur(4px);
+          }
+          .mobile-ai-fab {
+            display: flex !important;
+            position: fixed;
+            right: 0.9rem;
+            bottom: calc(4.9rem + env(safe-area-inset-bottom, 0px));
+            z-index: 9998;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 999px;
+            border: 1px solid rgba(157, 78, 221, 0.5);
+            background: rgba(157, 78, 221, 0.22);
+            color: #e6ccff;
+            font-weight: 700;
+            font-size: 0.8rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+          }
+
+          .mobile-bottom-nav { display: flex !important; }
+          .mobile-bottom-nav button { flex: 1 1 0; min-width: 0; padding: 0.3rem 0.15rem !important; }
+          .mobile-bottom-nav button span:last-child {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.6rem;
+          }
+
+          .neon-alert-box {
+            left: 0.75rem !important;
+            right: 0.75rem !important;
+            bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+            max-width: none !important;
+            padding: 0.9rem 1rem !important;
+          }
+
+          div[style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+          div[style*="min-width: 200px"],
+          div[style*="min-width: 220px"],
+          div[style*="min-width: 240px"] { min-width: 0 !important; }
+          div[style*="width: 220px"] { width: min(220px, 100%) !important; }
+          div[style*="padding: 2rem"] { padding: 1.2rem !important; }
+          div[style*="padding: 1.5rem"] { padding: 1.1rem !important; }
+          div[style*="height: 280px"] { height: 220px !important; }
+          div[style*="height: 320px"] { height: 230px !important; }
+
+          h1 { font-size: 1.55rem !important; }
+          h2 { font-size: 1.3rem !important; }
+          input, select, textarea { font-size: 16px !important; max-width: 100%; }
+          .esg-table { min-width: 520px; font-size: 0.78rem !important; }
+          .esg-table th, .esg-table td { padding: 0.6rem 0.55rem !important; white-space: nowrap; }
+
+          .ai-chat-panel {
+            width: auto !important;
+            left: 0.75rem !important;
+            right: 0.75rem !important;
+            bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+            height: min(72dvh, 600px) !important;
+            max-height: calc(100dvh - 5.75rem) !important;
+            border-radius: 18px !important;
+          }
+          .ai-chat-messages { padding: 0.85rem !important; font-size: 0.85rem !important; }
+          .profile-toast-card {
+            min-width: 0 !important;
+            width: min(90vw, 360px) !important;
+            padding: 1.25rem 1rem !important;
+          }
         }
       `;
       document.head.appendChild(styleElement);
@@ -674,14 +789,22 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
   };
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#050816', fontFamily: globalFont, color: '#fff', display: 'flex', position: 'relative' }}>
+    <div className="dashboard-shell" style={{ width: '100%', minHeight: '100vh', backgroundColor: '#050816', fontFamily: globalFont, color: '#fff', display: 'flex', position: 'relative' }}>
       <Suspense fallback={null}>
         <GridDistortion imageSrc={darkNeonImage} grid={10} mouse={0.25} strength={0.15} relaxation={0.9} />
       </Suspense>
       
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%' }}>
+        {isMobile && isSidebarOpen && (
+          <div
+            className="mobile-sidebar-backdrop"
+            aria-hidden="true"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {isSidebarOpen && (
-        <aside style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
+        <aside className="dashboard-sidebar" style={{ width: '280px', height: '100vh', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', position: 'sticky', top: 0 }}>
           <button
             type="button"
             aria-label="BlueGreen - Ümumi Panel"
@@ -770,7 +893,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
         )}
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <nav style={{ height: '70px', padding: '0 2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 10 }}>
+          <nav className="dashboard-nav" style={{ height: '70px', padding: '0 2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', background: 'rgba(5, 8, 22, 0.4)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: isMobile ? 10002 : 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', minWidth: 0 }}>
               <button
                 type="button"
@@ -782,10 +905,10 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
               >
                 {isSidebarOpen ? '✕' : '☰'}
               </button>
-              <span style={{ fontSize: '0.85rem', color: '#8a93a6', fontWeight: '500' }}>{t.panelSub}</span>
+              <span className="nav-subtitle" style={{ fontSize: '0.85rem', color: '#8a93a6', fontWeight: '500' }}>{t.panelSub}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '2px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="nav-lang" style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '2px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 {['az', 'en', 'ru'].map((l) => (
                   <button key={l} onClick={() => setLang(l)} style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', background: lang === l ? '#00D2FF' : 'transparent', color: lang === l ? '#050816' : '#8a93a6', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer', textTransform: 'uppercase', transition: '0.15s' }}>
                     {l}
@@ -795,7 +918,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             </div>
           </nav>
 
-          <main style={{ padding: '2.5rem', flex: 1, overflowY: 'auto' }}>
+          <main className="dashboard-main" style={{ padding: '2.5rem', flex: 1, overflowY: 'auto' }}>
             {activeTab === 'overview' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -1384,7 +1507,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
       </div>
 
       {isChatOpen && (
-        <div style={{ position: 'fixed', bottom: '20px', right: '20px', width: '420px', height: '550px', background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="ai-chat-panel" style={{ position: 'fixed', bottom: '20px', right: '20px', width: '420px', height: '550px', background: '#0a0f24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <span style={{ fontSize: '1.3rem' }}>🤖</span>
@@ -1464,6 +1587,7 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
           }}
         >
           <div
+            className="profile-toast-card"
             onClick={(e) => e.stopPropagation()}
             style={{
               minWidth: '320px',
@@ -1507,6 +1631,18 @@ const Dashboard = ({ onLogout, userEmail, companyName, token }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {isMobile && !isChatOpen && (
+        <button
+          type="button"
+          className="mobile-ai-fab"
+          aria-label="BlueGreen AI"
+          onClick={() => setIsChatOpen(true)}
+        >
+          <span>🤖</span>
+          <span>AI</span>
+        </button>
       )}
 
       {/* Mobil alt naviqasiya */}

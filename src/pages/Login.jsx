@@ -79,7 +79,16 @@ const MainLayout = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: '100vh', fontFamily: globalFont, color: '#fff', backgroundColor: '#050816', overflowX: 'hidden' }}>
+    <div className="login-shell" style={{ position: 'relative', width: '100%', minHeight: '100vh', fontFamily: globalFont, color: '#fff', backgroundColor: '#050816', overflowX: 'hidden' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .login-shell nav { padding: 0.55rem 0.8rem !important; border-radius: 18px !important; gap: 0.5rem !important; }
+          .login-shell .nav-link { display: none; }
+          .login-shell .login-modal { padding: 1.5rem 1.1rem !important; border-radius: 18px !important; }
+          .login-shell .login-modal h3 { font-size: 1.3rem !important; }
+          .login-shell input { font-size: 16px !important; }
+        }
+      `}</style>
       
       {/* ANİMASİYALI ARXAPLAN */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1, pointerEvents: 'none' }}>
@@ -90,7 +99,7 @@ const MainLayout = ({ onLoginSuccess }) => {
         
         {/* NAVİQASİYA PANELİ - Tam Responsiv Düzəlişlər Edildi */}
         <div style={{ padding: '1rem 1rem 0 1rem', position: 'sticky', top: 0, zIndex: 100 }}>
-          <nav style={{
+          <nav className="login-nav" style={{
             display: 'flex', alignItems: 'center', background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(20px)',
             padding: '0.6rem 1.2rem', borderRadius: '50px', border: '1px solid rgba(255, 255, 255, 0.08)',
             width: '100%', justifyContent: 'space-between', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
@@ -176,7 +185,7 @@ const MainLayout = ({ onLoginSuccess }) => {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 8, 22, 0.85)', backdropFilter: 'blur(15px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
           <ClickSpark sparkColor="#00FF87" sparkSize={20} sparkCount={6} duration={400} />
           
-          <div style={{ 
+          <div className="login-modal" style={{ 
             background: 'rgba(11, 17, 44, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(30px)', 
             padding: '2rem 1.8rem', borderRadius: '24px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)', 
             position: 'relative', maxHeight: '92vh', overflowY: 'auto', boxSizing: 'border-box'

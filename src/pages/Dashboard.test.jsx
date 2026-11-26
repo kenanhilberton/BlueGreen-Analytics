@@ -209,4 +209,43 @@ describe('Dashboard AI chat', () => {
     fireEvent.change(solar, { target: { value: '100' } });
     expect(screen.getByText('Hədəfə uyğun')).toBeInTheDocument();
   });
+
+  it('starts with the sidebar hidden on a phone and navigates every page from the bottom bar', () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 390 });
+
+    try {
+      renderDashboard();
+
+      expect(document.querySelector('aside')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Dashboard panelini aç' })).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Dashboard panelini aç' }));
+      expect(document.querySelector('aside')).toBeInTheDocument();
+      expect(document.querySelector('.mobile-sidebar-backdrop')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Dashboard panelini bağla' }));
+      expect(document.querySelector('aside')).not.toBeInTheDocument();
+
+      const bottomNavButton = (name) => screen.getByRole('button', { name, hidden: true });
+
+      fireEvent.click(bottomNavButton(/Ekoloji$/));
+      expect(screen.getByText('📋 12 Aylıq Detallı Ekoloji Resurs Hesabatı')).toBeInTheDocument();
+
+      fireEvent.click(bottomNavButton(/Sosial$/));
+      expect(screen.getByText('📋 12 Aylıq Sosial Korporativ Məsuliyyət Hesabatı')).toBeInTheDocument();
+
+      fireEvent.click(bottomNavButton(/İdarəetmə$/));
+      expect(screen.getByText('📋 12 Aylıq Korporativ İdarəetmə & Audit Hesabatı')).toBeInTheDocument();
+
+      fireEvent.click(bottomNavButton(/Profil$/));
+      expect(screen.getByText('👤 Çoxfunksiyalı Müəssisə Profili')).toBeInTheDocument();
+
+      fireEvent.click(bottomNavButton(/Panel$/));
+      expect(screen.getByText('Müəssisə Xəritəsi')).toBeInTheDocument();
+      expect(document.querySelector('.mobile-ai-fab')).not.toBeNull();
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: originalWidth });
+    }
+  });
 });
